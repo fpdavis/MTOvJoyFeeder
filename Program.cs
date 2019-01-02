@@ -13,15 +13,23 @@ namespace MTOvJoyFeeder
 
         static void Main(string[] args)
         {
+            List<JoystickConfig> oJoystickConfig = Config.ReadConfigFile();
+
             List<JoystickInfo> oAllJoystickInfo = new List<JoystickInfo>();
-            MainForJoystick(oAllJoystickInfo);
+            DetectPhysicalJoysticks(oAllJoystickInfo);
 
             List<vJoystickInfo> oAllVJoystickInfo = new List<vJoystickInfo>();
-            MainForVJoystick(oAllVJoystickInfo);
+            DetectVirtualJoysticks(oAllVJoystickInfo);
 
-            Poll(oAllVJoystickInfo, oAllJoystickInfo);
+            if (oJoystickConfig == null)
+            {
+                oJoystickConfig = Config.CreateConfigFile(oAllJoystickInfo);
+            }
+
+            PollJoysticks(oAllVJoystickInfo, oAllJoystickInfo);
         } // Main
-        static void MainForVJoystick(List<vJoystickInfo> oAllVJoystickInfo)
+
+        static void DetectVirtualJoysticks(List<vJoystickInfo> oAllVJoystickInfo)
         {
             vJoystickInfo oNewVJoystickInfo = new vJoystickInfo();
 
@@ -131,8 +139,7 @@ namespace MTOvJoyFeeder
 
             oAllVJoystickInfo.Add(oNewVJoystickInfo);
         }
-
-        static void MainForJoystick(List<JoystickInfo> oAllJoystickInfo)
+        static void DetectPhysicalJoysticks(List<JoystickInfo> oAllJoystickInfo)
         {
             // Initialize DirectInput
             var directInput = new DirectInput();
@@ -246,7 +253,8 @@ namespace MTOvJoyFeeder
                 oAllJoystickInfo.Add(oNewJoystickInfo);
             }
         }
-        static void Poll(List<vJoystickInfo> oAllVJoystickInfo, List<JoystickInfo> oAllJoystickInfo)
+
+        static void PollJoysticks(List<vJoystickInfo> oAllVJoystickInfo, List<JoystickInfo> oAllJoystickInfo)
         {
             Console.WriteLine("\nShowing Events:\n");
 
@@ -360,6 +368,7 @@ namespace MTOvJoyFeeder
                 Thread.Sleep(100);
             }
         }
+
         static int NormalizeRange(int num, long fromMin, long fromMax, long toMin, long toMax)
         {
             // TODO: Cache these ranges for each device
