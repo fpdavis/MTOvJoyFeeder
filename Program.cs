@@ -39,11 +39,11 @@ namespace MTOvJoyFeeder
             // Get the driver attributes (Vendor ID, Product ID, Version Number)
             if (!oVirtualJoystick.vJoyEnabled())
             {
-                Console.WriteLine("vJoy driver not enabled: Failed Getting vJoy attributes.");
+                Console.WriteLine("\nvJoy driver not enabled: Failed Getting vJoy attributes.");
                 return;
             }
             else
-                Console.WriteLine("Vendor: {0}\nProduct: {1}\nVersion Number: {2}", oVirtualJoystick.GetvJoyManufacturerString(), oVirtualJoystick.GetvJoyProductString(), oVirtualJoystick.GetvJoySerialNumberString());
+                Console.WriteLine("\nProduct: {0}\nVendor: {1}\nVersion Number: {2}", oVirtualJoystick.GetvJoyProductString(), oVirtualJoystick.GetvJoyManufacturerString(), oVirtualJoystick.GetvJoySerialNumberString());
 
             // Test if DLL matches the driver
             UInt32 DllVer = 0, DrvVer = 0;
@@ -168,7 +168,10 @@ namespace MTOvJoyFeeder
 
             foreach (var oDeviceInstance in oDeviceInstances)
             {
-                Console.WriteLine("\nFound {0} '{1}' - {2}", oDeviceInstance.Type, oDeviceInstance.InstanceName.Trim(), oDeviceInstance.ProductGuid);
+                Console.WriteLine("\nFound {0}", oDeviceInstance.InstanceName.Trim());
+                Console.WriteLine("\tJoystick_Name:\t\t\t{0}", oDeviceInstance.InstanceName.Trim());
+                Console.WriteLine("\tJoystick_Type:\t\t\t{0}", oDeviceInstance.Type);
+                Console.WriteLine("\tJoystick_GUID:\t\t\t{0}", oDeviceInstance.ProductGuid);
 
                 var oNewJoystickInfo = new JoystickInfo();
 

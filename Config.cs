@@ -18,7 +18,7 @@ namespace MTOvJoyFeeder
             {
                 string sAllJoystickInfo = File.ReadAllText(sCurrentPath);
 
-                oAllJoystickInfo = (List<JoystickConfig>)JsonConvert.DeserializeObject(sAllJoystickInfo);
+                oAllJoystickInfo = JsonConvert.DeserializeObject<List<JoystickConfig>>(sAllJoystickInfo);
             }
 
             return oAllJoystickInfo;            
@@ -35,7 +35,13 @@ namespace MTOvJoyFeeder
                 oConfigSetting.Joystick_Name = oJoystickInfo.oDeviceInstance.InstanceName.Trim();
                 oConfigSetting.Joystick_Type = oJoystickInfo.oDeviceInstance.Type.ToString();
                 oConfigSetting.Joystick_GUID = oJoystickInfo.oDeviceInstance.InstanceGuid;
+                oConfigSetting.Map_Buttons = new int[oJoystickInfo.oJoystick.Capabilities.ButtonCount];
 
+                for (int i = 0; i < oJoystickInfo.oJoystick.Capabilities.ButtonCount; i++)
+                {
+                    oConfigSetting.Map_Buttons[i] = i;
+                }
+                
                 oJoystickConfig.Add(oConfigSetting);
             }
 

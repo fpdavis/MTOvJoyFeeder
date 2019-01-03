@@ -3,11 +3,11 @@ Many To One (technically many to many) Virtual Joystick Feeder. Maps one or more
 
 A few scenarios where this might be useful:
 
-** Combine input from two controllers into one virtual controller such as a flight stick and throttle. Allowing each controller to feed information to a different set of buttons/axis.
-** Combine input from two or more controllers into one virtual controller where each controller is mean to be used exclusively of the others (one at a time). This is good for a setup where the user has the option to select from multiple joysticks but you don't want to rempa the application each time a differnt controller is used.
-** An application doesn't recognize a controller but will recognize a vJoy controller. In this case the virtual controller is just being used as a pass through for the physical controller.
-** Multiple players for a single player game where several people have their own controller and can either take turns controlling the game or have specific tasks (input controls) they are responsible for.
-** Heads up/on on one games can be converted to multi player team games. An example would be with a fighting game such as Street Fighter II, each character could be mapped to a virtual joystick being feed by a team of one or more players. The players would then need to coorindate their movement to control the character.
+* Combine input from two controllers into one virtual controller such as a flight stick and throttle. Allowing each controller to feed information to a different set of buttons/axis.
+* Combine input from two or more controllers into one virtual controller where each controller is mean to be used exclusively of the others (one at a time). This is good for a setup where the user has the option to select from multiple joysticks but you don't want to rempa the application each time a differnt controller is used.
+* An application doesn't recognize a controller but will recognize a vJoy controller. In this case the virtual controller is just being used as a pass through for the physical controller.
+* Multiple players for a single player game where several people have their own controller and can either take turns controlling the game or have specific tasks (input controls) they are responsible for.
+* Heads up/on on one games can be converted to multi player team games. An example would be with a fighting game such as Street Fighter II, each character could be mapped to a virtual joystick being feed by a team of one or more players. The players would then need to coorindate their movement to control the character.
 
 ### How it works
 
@@ -45,4 +45,4 @@ In the above scenario left movement might appear erratic as the two joysticks ch
 
 * Loads all joystick data and virtual joystick data
 * Loop that directs all input from acquired joysticks to first virtual stick
-* Added support for a configuration file
+* Adding support for a configuration file

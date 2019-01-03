@@ -55,6 +55,23 @@ namespace MTOvJoyFeeder
         public double PercentRZ;
 
         public double PercentageSlack = .01;
+
+        public int[] Map_To_Virtual_Ids = { 1 };
+
+        public JoystickOffset Map_X = SharpDX.DirectInput.JoystickOffset.X;
+        public JoystickOffset Map_Y = SharpDX.DirectInput.JoystickOffset.Y;
+        public JoystickOffset Map_Z = SharpDX.DirectInput.JoystickOffset.Z;
+
+        public JoystickOffset Map_RotationX = SharpDX.DirectInput.JoystickOffset.RotationX;
+        public JoystickOffset Map_RotationY = SharpDX.DirectInput.JoystickOffset.RotationY;
+        public JoystickOffset Map_RotationZ = SharpDX.DirectInput.JoystickOffset.RotationZ;
+
+        public JoystickOffset Map_PointOfViewControllers0 = SharpDX.DirectInput.JoystickOffset.PointOfViewControllers0;
+        public JoystickOffset Map_PointOfViewControllers1 = SharpDX.DirectInput.JoystickOffset.PointOfViewControllers1;
+        public JoystickOffset Map_PointOfViewControllers2 = SharpDX.DirectInput.JoystickOffset.PointOfViewControllers2;
+        public JoystickOffset Map_PointOfViewControllers3 = SharpDX.DirectInput.JoystickOffset.PointOfViewControllers3;
+
+        public int[] Map_Buttons = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 }; // SharpDX.DirectInput.JoystickOffset.Buttons0;
     }
 
     public class JoystickConfig
@@ -75,6 +92,9 @@ namespace MTOvJoyFeeder
         public string Map_RotationZ = "RotationZ"; // SharpDX.DirectInput.JoystickOffset.RotationZ;
 
         public string Map_PointOfViewControllers0 = "PointOfViewControllers0"; // SharpDX.DirectInput.JoystickOffset.PointOfViewControllers0;
+        public string Map_PointOfViewControllers1 = "PointOfViewControllers1"; // SharpDX.DirectInput.JoystickOffset.PointOfViewControllers1;
+        public string Map_PointOfViewControllers2 = "PointOfViewControllers2"; // SharpDX.DirectInput.JoystickOffset.PointOfViewControllers2;
+        public string Map_PointOfViewControllers3 = "PointOfViewControllers3"; // SharpDX.DirectInput.JoystickOffset.PointOfViewControllers3;
 
         public int[] Map_Buttons = { 0,1,2,3,4,5,6,7,8,9,10,11,12 }; // SharpDX.DirectInput.JoystickOffset.Buttons0;
     }
