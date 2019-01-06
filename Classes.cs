@@ -19,7 +19,10 @@ namespace MTOvJoyFeeder
         public int iVerbosity { get; set; }
 
         [Option('c', "config", Required = false, HelpText = "Override location of the config file. Full or relative path must be provided.")]        
-        public string ConfigFile { get; set; }     
+        public string ConfigFile { get; set; }
+
+        [Option('e', "MaxErrors", Required = false, HelpText = "Maximum number of errors before removing a Joystick from monitoring.")]
+        public uint ErrorsBeforeJoystickRemoval { get; set; }
     }
 
     public class vJoystickInfo
@@ -47,6 +50,7 @@ namespace MTOvJoyFeeder
         public Joystick oJoystick;
         public IList<EffectInfo> oEffectInfo;
         public uint id = 1;
+        public uint ErrorCount = 0;
 
         public long lMinXVal = int.MinValue;
         public long lMaxXVal = int.MaxValue;

@@ -31,6 +31,7 @@ In the above scenario left movement might appear erratic as the two joysticks ch
 ### Todo (in order of importance):
 
 * Add propper logging methods
+* Add timer to detect controllers when they are added
 * Need to load state for PointOfViewControllers1 PointOfViewControllers3
 * Investigate implementing oJoystickInfo.oJoystick.SetNotification()
 * Determine current support for Force Feedback in vJoy
@@ -48,3 +49,5 @@ In the above scenario left movement might appear erratic as the two joysticks ch
 * Added configuration name/location settings to app.config
 * Accepts configuration location from command line
 * Added mappings for joysticks from config
+* Added If DEBUG directive around Polling logging
+* Added handling of removed controller
