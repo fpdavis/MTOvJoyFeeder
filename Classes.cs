@@ -1,9 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using SharpDX.DirectInput;
+using CommandLine;
+using CommandLine.Text;
 
 namespace MTOvJoyFeeder
 {
+    public class Options
+    {
+        [Option('v', "Verbosity", Default = Program.giVerbosity_Error, HelpText =
+              "The amount of verbosity to use. [-v 4]. "
+            + "Debug (5): Super detail. "
+            + "Verbose (4): Almost everything. "
+            + "Information (3): Generally useful information. "
+            + "Warning (2): Expected problems. "
+            + "Error (1): Errors that are recoverable. "
+            + "Critical (0): Errors that stop execution. ")]
+        public int iVerbosity { get; set; }
+
+        [Option('c', "config", Required = false, HelpText = "Override location of the config file. Full or relative path must be provided.")]        
+        public string ConfigFile { get; set; }     
+    }
+
     public class vJoystickInfo
     {
         public uint id = 1;
@@ -58,27 +76,29 @@ namespace MTOvJoyFeeder
 
         public int[] Map_To_Virtual_Ids = { 1 };
 
-        public JoystickOffset Map_X = SharpDX.DirectInput.JoystickOffset.X;
-        public JoystickOffset Map_Y = SharpDX.DirectInput.JoystickOffset.Y;
-        public JoystickOffset Map_Z = SharpDX.DirectInput.JoystickOffset.Z;
+        public HID_USAGES Map_X = HID_USAGES.HID_USAGE_X;
+        public HID_USAGES Map_Y = HID_USAGES.HID_USAGE_Y;
+        public HID_USAGES Map_Z = HID_USAGES.HID_USAGE_Z;
 
-        public JoystickOffset Map_RotationX = SharpDX.DirectInput.JoystickOffset.RotationX;
-        public JoystickOffset Map_RotationY = SharpDX.DirectInput.JoystickOffset.RotationY;
-        public JoystickOffset Map_RotationZ = SharpDX.DirectInput.JoystickOffset.RotationZ;
+        public HID_USAGES Map_RotationX = HID_USAGES.HID_USAGE_RX;
+        public HID_USAGES Map_RotationY = HID_USAGES.HID_USAGE_RY;
+        public HID_USAGES Map_RotationZ = HID_USAGES.HID_USAGE_RZ;
 
-        public JoystickOffset Map_PointOfViewControllers0 = SharpDX.DirectInput.JoystickOffset.PointOfViewControllers0;
-        public JoystickOffset Map_PointOfViewControllers1 = SharpDX.DirectInput.JoystickOffset.PointOfViewControllers1;
-        public JoystickOffset Map_PointOfViewControllers2 = SharpDX.DirectInput.JoystickOffset.PointOfViewControllers2;
-        public JoystickOffset Map_PointOfViewControllers3 = SharpDX.DirectInput.JoystickOffset.PointOfViewControllers3;
+        public uint Map_PointOfViewControllers0 = 0;
+        public uint Map_PointOfViewControllers1 = 1;
+        public uint Map_PointOfViewControllers2 = 2;
+        public uint Map_PointOfViewControllers3 = 3;
 
-        public int[] Map_Buttons = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 }; // SharpDX.DirectInput.JoystickOffset.Buttons0;
+        public uint[] Map_Buttons = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 }; // SharpDX.DirectInput.JoystickOffset.Buttons0;
     }
 
     public class JoystickConfig
     {
-        public string Joystick_Name;
-        public string Joystick_Type;
-        public Guid Joystick_GUID;
+        public Boolean Enabled = true;
+        public string Instance_Name;
+        public string Instance_Type;
+        public Guid Instance_GUID;
+        public Guid Product_GUID;
         public int[] Map_To_Virtual_Ids = { 1 };
         
         public double Percentage_Slack = .01;
@@ -91,11 +111,11 @@ namespace MTOvJoyFeeder
         public string Map_RotationY = "RotationY"; // SharpDX.DirectInput.JoystickOffset.RotationY;
         public string Map_RotationZ = "RotationZ"; // SharpDX.DirectInput.JoystickOffset.RotationZ;
 
-        public string Map_PointOfViewControllers0 = "PointOfViewControllers0"; // SharpDX.DirectInput.JoystickOffset.PointOfViewControllers0;
-        public string Map_PointOfViewControllers1 = "PointOfViewControllers1"; // SharpDX.DirectInput.JoystickOffset.PointOfViewControllers1;
-        public string Map_PointOfViewControllers2 = "PointOfViewControllers2"; // SharpDX.DirectInput.JoystickOffset.PointOfViewControllers2;
-        public string Map_PointOfViewControllers3 = "PointOfViewControllers3"; // SharpDX.DirectInput.JoystickOffset.PointOfViewControllers3;
+        public uint Map_PointOfViewControllers0 = 0; // SharpDX.DirectInput.JoystickOffset.PointOfViewControllers0;
+        public uint Map_PointOfViewControllers1 = 1; // SharpDX.DirectInput.JoystickOffset.PointOfViewControllers1;
+        public uint Map_PointOfViewControllers2 = 2; // SharpDX.DirectInput.JoystickOffset.PointOfViewControllers2;
+        public uint Map_PointOfViewControllers3 = 3; // SharpDX.DirectInput.JoystickOffset.PointOfViewControllers3;
 
-        public int[] Map_Buttons = { 0,1,2,3,4,5,6,7,8,9,10,11,12 }; // SharpDX.DirectInput.JoystickOffset.Buttons0;
+        public uint[] Map_Buttons = { 0,1,2,3,4,5,6,7,8,9,10,11,12 }; // SharpDX.DirectInput.JoystickOffset.Buttons0;
     }
 }

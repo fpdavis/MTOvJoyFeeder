@@ -30,15 +30,13 @@ In the above scenario left movement might appear erratic as the two joysticks ch
 
 ### Todo (in order of importance):
 
-* Add configuration name/location settings to app.config
-* Accept configuration location from commnad line
-* Add mappings for joysticks from config
 * Add propper logging methods
+* Need to load state for PointOfViewControllers1 PointOfViewControllers3
 * Investigate implementing oJoystickInfo.oJoystick.SetNotification()
 * Determine current support for Force Feedback in vJoy
 * Test with all available joysticks
-* Create to Launchbox plugin
-* Create to Windows Service
+* Create Launchbox plugin
+* Create Windows Service
 
 
 ### Changes (oldest to newest):
@@ -46,3 +44,7 @@ In the above scenario left movement might appear erratic as the two joysticks ch
 * Loads all joystick data and virtual joystick data
 * Loop that directs all input from acquired joysticks to first virtual stick
 * Adding support for a configuration file
+
+* Added configuration name/location settings to app.config
+* Accepts configuration location from command line
+* Added mappings for joysticks from config

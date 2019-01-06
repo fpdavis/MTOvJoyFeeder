@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System.IO;
 using System.Reflection;
+using System.Configuration;
 
 namespace MTOvJoyFeeder
 {
@@ -11,12 +12,11 @@ namespace MTOvJoyFeeder
         {
             List<JoystickConfig> oAllJoystickInfo = null;
 
-            string sCurrentPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            sCurrentPath += "/MTOvJoyFeeder.json";
+            string sConfigFileLocation = ConfigFileLocation();
 
-            if (File.Exists(sCurrentPath))
+            if (File.Exists(sConfigFileLocation))
             {
-                string sAllJoystickInfo = File.ReadAllText(sCurrentPath);
+                string sAllJoystickInfo = File.ReadAllText(sConfigFileLocation);
 
                 oAllJoystickInfo = JsonConvert.DeserializeObject<List<JoystickConfig>>(sAllJoystickInfo);
             }
@@ -32,12 +32,13 @@ namespace MTOvJoyFeeder
             {
                 JoystickConfig oConfigSetting = new JoystickConfig();
 
-                oConfigSetting.Joystick_Name = oJoystickInfo.oDeviceInstance.InstanceName.Trim();
-                oConfigSetting.Joystick_Type = oJoystickInfo.oDeviceInstance.Type.ToString();
-                oConfigSetting.Joystick_GUID = oJoystickInfo.oDeviceInstance.InstanceGuid;
-                oConfigSetting.Map_Buttons = new int[oJoystickInfo.oJoystick.Capabilities.ButtonCount];
+                oConfigSetting.Instance_Name = oJoystickInfo.oDeviceInstance.InstanceName.Trim();
+                oConfigSetting.Instance_Type = oJoystickInfo.oDeviceInstance.Type.ToString();
+                oConfigSetting.Instance_GUID = oJoystickInfo.oDeviceInstance.InstanceGuid;
+                oConfigSetting.Product_GUID = oJoystickInfo.oDeviceInstance.ProductGuid;
+                oConfigSetting.Map_Buttons = new uint[oJoystickInfo.oJoystick.Capabilities.ButtonCount];
 
-                for (int i = 0; i < oJoystickInfo.oJoystick.Capabilities.ButtonCount; i++)
+                for (uint i = 0; i < oJoystickInfo.oJoystick.Capabilities.ButtonCount; i++)
                 {
                     oConfigSetting.Map_Buttons[i] = i;
                 }
@@ -52,10 +53,30 @@ namespace MTOvJoyFeeder
 
         private static void WriteConfigFile(List<JoystickConfig> oJoystickConfig)
         {
-            string sCurrentPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            sCurrentPath += "\\MTOvJoyFeeder.json";
+            File.WriteAllText(ConfigFileLocation(), JsonConvert.SerializeObject(oJoystickConfig));
+        }
 
-            File.WriteAllText(sCurrentPath, JsonConvert.SerializeObject(oJoystickConfig));
+        private static string ConfigFileLocation()
+        {
+            if (Program.goOptions != null && !string.IsNullOrWhiteSpace(Program.goOptions.ConfigFile))
+            {
+                return (Program.goOptions.ConfigFile);
+            }
+
+            string sConfigPath = ConfigurationManager.AppSettings["ConfigPath"];
+
+            if (string.IsNullOrWhiteSpace(sConfigPath))
+            {
+                sConfigPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            }
+
+            string sConfigFile = ConfigurationManager.AppSettings["ConfigFile"];
+            if (string.IsNullOrWhiteSpace(sConfigFile))
+            {
+                sConfigFile += "MTOvJoyFeeder.json";
+            }
+
+            return (sConfigPath + "\\" + sConfigFile);
         }
 
     }
