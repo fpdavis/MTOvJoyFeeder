@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 using System.IO;
-using System.Reflection;
-using System.Configuration;
 
 namespace MTOvJoyFeeder
 {
@@ -11,12 +9,10 @@ namespace MTOvJoyFeeder
         public static List<JoystickConfig> ReadConfigFile()
         {
             List<JoystickConfig> oAllJoystickInfo = null;
-
-            string sConfigFileLocation = ConfigFileLocation();
-
-            if (File.Exists(sConfigFileLocation))
+            
+            if (File.Exists(Program.goOptions.ConfigFile))
             {
-                string sAllJoystickInfo = File.ReadAllText(sConfigFileLocation);
+                string sAllJoystickInfo = File.ReadAllText(Program.goOptions.ConfigFile);
 
                 oAllJoystickInfo = JsonConvert.DeserializeObject<List<JoystickConfig>>(sAllJoystickInfo);
             }
@@ -53,30 +49,7 @@ namespace MTOvJoyFeeder
 
         private static void WriteConfigFile(List<JoystickConfig> oJoystickConfig)
         {
-            File.WriteAllText(ConfigFileLocation(), JsonConvert.SerializeObject(oJoystickConfig));
-        }
-
-        private static string ConfigFileLocation()
-        {
-            if (Program.goOptions != null && !string.IsNullOrWhiteSpace(Program.goOptions.ConfigFile))
-            {
-                return (Program.goOptions.ConfigFile);
-            }
-
-            string sConfigPath = ConfigurationManager.AppSettings["ConfigPath"];
-
-            if (string.IsNullOrWhiteSpace(sConfigPath))
-            {
-                sConfigPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            }
-
-            string sConfigFile = ConfigurationManager.AppSettings["ConfigFile"];
-            if (string.IsNullOrWhiteSpace(sConfigFile))
-            {
-                sConfigFile += "MTOvJoyFeeder.json";
-            }
-
-            return (sConfigPath + "\\" + sConfigFile);
+            File.WriteAllText(Program.goOptions.ConfigFile, JsonConvert.SerializeObject(oJoystickConfig));
         }
 
     }

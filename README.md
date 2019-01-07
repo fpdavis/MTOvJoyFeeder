@@ -30,15 +30,14 @@ In the above scenario left movement might appear erratic as the two joysticks ch
 
 ### Todo (in order of importance):
 
-* Add propper logging methods
-* Add timer to detect controllers when they are added
-* Need to load state for PointOfViewControllers1 PointOfViewControllers3
-* Investigate implementing oJoystickInfo.oJoystick.SetNotification()
+* Create Windows Service
 * Determine current support for Force Feedback in vJoy
 * Test with all available joysticks
 * Create Launchbox plugin
-* Create Windows Service
-
+* Add timer to detect controllers when they are added
+* Need to load state for PointOfViewControllers1 PointOfViewControllers3
+* Investigate implementing oJoystickInfo.oJoystick.SetNotification()
+* Clean up some calls to WriteToEventLog that are using String.Format
 
 ### Changes (oldest to newest):
 
@@ -51,3 +50,8 @@ In the above scenario left movement might appear erratic as the two joysticks ch
 * Added mappings for joysticks from config
 * Added If DEBUG directive around Polling logging
 * Added handling of removed controller
+
+* Added WriteToEventLog to replace all Console.Write calls
+* Added better configuration/command line handling.
+* Added support for multiple virtual controls associated with physical controllers
+* Added config support for SleepTime
