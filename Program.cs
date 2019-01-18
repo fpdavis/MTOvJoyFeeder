@@ -6,7 +6,8 @@ using System.Text;
 using System.Threading;
 using CommandLine;
 using SharpDX.DirectInput;
-using vJoyInterfaceWrap;
+//using vJoyInterfaceWrap;
+using vGenInterfaceWrap;
 using System.Linq;
 
 namespace MTOvJoyFeeder
@@ -16,7 +17,7 @@ namespace MTOvJoyFeeder
         //private static StringBuilder sbgMessageLog = new StringBuilder();
 
         //static public vJoy.JoystickState iReport;
-        static public vJoy oVirtualJoystick;
+        static public vGen oVirtualJoystick;
         static public Options goOptions;
 
         static void Main(string[] args)
@@ -30,7 +31,7 @@ namespace MTOvJoyFeeder
         static void Run(Options oOptions)
         {
             goOptions = oOptions;
-
+            
             List<JoystickConfig> oJoystickConfig = Config.ReadConfigFile();
 
             List<JoystickInfo> oAllJoystickInfo = new List<JoystickInfo>();
@@ -50,13 +51,81 @@ namespace MTOvJoyFeeder
                 oJoystickConfig = Config.CreateConfigFile(oAllJoystickInfo);
             }
 
+            TestXBox();
             PollJoysticks(oAllVJoystickInfo, oAllJoystickInfo);
         }
 
+        static void TestXBox()
+        {
+            uint id = 1;
+            byte Led = 0xFF;
+
+            if (oVirtualJoystick.isVBusExist() != NTSTATUS.Value.STATUS_SUCCESS)
+            {
+                WriteToEventLog("vBus for xBox controller not enabled...");
+            }
+            else
+                WriteToEventLog("vBus found...");
+
+            byte nSlots = 0xFF;
+            oVirtualJoystick.GetNumEmptyBusSlots(ref nSlots);
+
+            WriteToEventLog($"{nSlots} Empty Controller slots found.");
+
+            if (nSlots < 1)
+            {
+                WriteToEventLog("No available vJoy Device found :( \t Cannot continue");
+                Console.ReadKey();
+                Environment.Exit(1);
+            }            
+
+            //Check for avaiable devices
+            bool findid = false;
+            for (id = 1; id <= 4; id++)
+            {
+                //Not Working
+                oVirtualJoystick.isControllerPluggedIn(id, ref findid);
+                WriteToEventLog("Device ID : " + id + " ( " + findid.ToString() + " )");
+                if (!findid)
+                    break;
+            }
+
+            if (findid == true)
+            {
+                WriteToEventLog("No available vJoy Device found :( \t Cannot continue");
+                Console.ReadKey();
+                Environment.Exit(1);
+            }
+
+            // Not Working
+            //oVirtualJoystick.PlugIn(id);
+            id = 0;
+            var Value = oVirtualJoystick.PlugInNext(ref id);            
+            var NTSTATUS_Name = NTSTATUS.Get.NameByValue(Value);
+            var NTSTATUS_Value = NTSTATUS.Get.ValueByName(NTSTATUS_Name);
+            var NTSTATUS_description = NTSTATUS.Get.Description(NTSTATUS_Name);
+                NTSTATUS_description = NTSTATUS.Get.Description(Value);
+            Console.WriteLine(NTSTATUS.Description.STATUS_UNSUCCESSFUL);
+
+            var Severity = NTSTATUS.Get.Severity.Status(Value);
+            
+            
+            oVirtualJoystick.isControllerOwned(id, ref findid);
+            if (findid != true)
+                WriteToEventLog("Failed to acquire vJoy device");
+            else
+            {
+                oVirtualJoystick.GetLedNumber(id, ref Led);
+                WriteToEventLog("Acquired :: vXbox ID : " + id.ToString() + "\n" + "\tLED number : " + Led.ToString());
+            }
+
+            Console.ReadKey();
+            Environment.Exit(1);
+        }
         static void DetectVirtualJoysticks(List<vJoystickInfo> oAllVJoystickInfo, List<uint> oVirtualJoysticksToUse)
         {
             // Create one joystick object and a position structure.
-            oVirtualJoystick = new vJoy();
+            oVirtualJoystick = new vGen();
 
             // Get the driver attributes (Vendor ID, Product ID, Version Number)
             if (!oVirtualJoystick.vJoyEnabled())
@@ -102,7 +171,7 @@ namespace MTOvJoyFeeder
                         WriteToEventLog($"vJoy Device {id} general error\nCannot continue");
                         return;
                 };
-
+                
                 // Acquire the target
                 if ((status == VjdStat.VJD_STAT_OWN) || ((status == VjdStat.VJD_STAT_FREE) && (!oVirtualJoystick.AcquireVJD(id))))
                 {
@@ -111,6 +180,13 @@ namespace MTOvJoyFeeder
                 }
                 else
                     WriteToEventLog($"Acquired: vJoy device number {id}.");
+
+                if (oVirtualJoystick.IsDeviceFfb(id))
+                {
+                    object oFFData = null;
+                    oVirtualJoystick.FfbRegisterGenCB(vJoyFfbCbFunc_CallBack, oFFData);
+                }
+
 
                 // Check which axes are supported
                 bool AxisX = oVirtualJoystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_X);
@@ -324,6 +400,11 @@ namespace MTOvJoyFeeder
             }
         }
 
+        private static void vJoyFfbCbFunc_CallBack(IntPtr data, object userData)
+        {
+            WriteToEventLog(data.ToString());
+        }
+
         static JoystickOffset StringToOffset(string sOffset)
         {
             switch (sOffset.ToUpper())
@@ -390,6 +471,8 @@ namespace MTOvJoyFeeder
 
         static void PollJoysticks(List<vJoystickInfo> oAllVJoystickInfo, List<JoystickInfo> oAllJoystickInfo)
         {
+            if (oAllVJoystickInfo.Count == 0 || oAllJoystickInfo.Count == 0) return;
+
             WriteToEventLog("\nMonitoring for events.\n");
             JoystickUpdate[] oBufferedData;
             JoystickInfo oJoystickInfo;
@@ -436,6 +519,8 @@ namespace MTOvJoyFeeder
                         foreach (uint iVJoystickId in oJoystickInfo.Map_To_Virtual_Ids)
                         {
                             var oThisVJoystickInfo = oAllVJoystickInfo.Find(x => x.id == iVJoystickId);
+                            if (oThisVJoystickInfo == null) continue;
+
                             foreach (var oState in oBufferedData)
                             {
                                 int iNormalizedValue;

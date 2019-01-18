@@ -30,7 +30,7 @@ namespace MTOvJoyFeeder
 
     }
 
-    public class Options
+        public class Options
     {
         [Option('v', "Verbosity", HelpText =
               "The amount of verbosity to use. [-v 3]. "

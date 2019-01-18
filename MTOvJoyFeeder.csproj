@@ -77,14 +77,14 @@
       <HintPath>packages\System.Reflection.TypeExtensions.4.1.0\lib\net46\System.Reflection.TypeExtensions.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml" />
-    <Reference Include="vJoyInterfaceWrap, Version=0.2.0.5, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\x64\vJoyInterfaceWrap.dll</HintPath>
+    <Reference Include="vGenInterfaceWrap">
+      <HintPath>..\..\..\vGenInterface SDK\x64\vGenInterfaceWrap.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Classes.cs" />
     <Compile Include="Config.cs" />
+    <Compile Include="NTStatus.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
