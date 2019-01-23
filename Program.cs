@@ -6,8 +6,8 @@ using System.Text;
 using System.Threading;
 using CommandLine;
 using SharpDX.DirectInput;
-//using vJoyInterfaceWrap;
 using vGenInterfaceWrap;
+using vXboxInterfaceWrap;
 using System.Linq;
 
 namespace MTOvJoyFeeder
@@ -19,6 +19,7 @@ namespace MTOvJoyFeeder
         //static public vJoy.JoystickState iReport;
         static public vGen oVirtualJoystick;
         static public Options goOptions;
+
 
         static void Main(string[] args)
         {
@@ -54,21 +55,21 @@ namespace MTOvJoyFeeder
             TestXBox();
             PollJoysticks(oAllVJoystickInfo, oAllJoystickInfo);
         }
-
+                
         static void TestXBox()
         {
             uint id = 1;
             byte Led = 0xFF;
 
-            if (oVirtualJoystick.isVBusExist() != NTSTATUS.Value.STATUS_SUCCESS)
+            if (vXboxInterface.isVBusExists())
             {
-                WriteToEventLog("vBus for xBox controller not enabled...");
+                WriteToEventLog("vBus found..."); 
             }
             else
-                WriteToEventLog("vBus found...");
+                WriteToEventLog("vBus for xBox controller not enabled...");
 
             byte nSlots = 0xFF;
-            oVirtualJoystick.GetNumEmptyBusSlots(ref nSlots);
+            vXboxInterface.GetNumEmptyBusSlots(ref nSlots);
 
             WriteToEventLog($"{nSlots} Empty Controller slots found.");
 
@@ -84,7 +85,7 @@ namespace MTOvJoyFeeder
             for (id = 1; id <= 4; id++)
             {
                 //Not Working
-                oVirtualJoystick.isControllerPluggedIn(id, ref findid);
+                findid = vXboxInterface.isControllerExists(id);
                 WriteToEventLog("Device ID : " + id + " ( " + findid.ToString() + " )");
                 if (!findid)
                     break;
@@ -97,25 +98,15 @@ namespace MTOvJoyFeeder
                 Environment.Exit(1);
             }
 
-            // Not Working
-            //oVirtualJoystick.PlugIn(id);
-            id = 0;
-            var Value = oVirtualJoystick.PlugInNext(ref id);            
-            var NTSTATUS_Name = NTSTATUS.Get.NameByValue(Value);
-            var NTSTATUS_Value = NTSTATUS.Get.ValueByName(NTSTATUS_Name);
-            var NTSTATUS_description = NTSTATUS.Get.Description(NTSTATUS_Name);
-                NTSTATUS_description = NTSTATUS.Get.Description(Value);
-            Console.WriteLine(NTSTATUS.Description.STATUS_UNSUCCESSFUL);
+            vXboxInterface.PlugIn(id);
 
-            var Severity = NTSTATUS.Get.Severity.Status(Value);
-            
-            
-            oVirtualJoystick.isControllerOwned(id, ref findid);
+
+            findid = vXboxInterface.isControllerOwned(id);
             if (findid != true)
                 WriteToEventLog("Failed to acquire vJoy device");
             else
             {
-                oVirtualJoystick.GetLedNumber(id, ref Led);
+                vXboxInterface.GetLedNumber(id, ref Led);
                 WriteToEventLog("Acquired :: vXbox ID : " + id.ToString() + "\n" + "\tLED number : " + Led.ToString());
             }
 
