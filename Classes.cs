@@ -147,6 +147,8 @@ namespace MTOvJoyFeeder
     {
         public uint id = 1;
 
+        public DevType ControlerType = DevType.vXbox;
+
         public long lMinXVal = int.MaxValue;
         public long lMaxXVal = int.MaxValue;
         public long lMinYVal = int.MaxValue;
@@ -167,7 +169,10 @@ namespace MTOvJoyFeeder
         public DeviceInstance oDeviceInstance;
         public Joystick oJoystick;
         public IList<EffectInfo> oEffectInfo;
-        public uint[] Map_To_Virtual_Ids = { 1 };
+
+        public uint[] Map_To_vJoyDevice_Ids = { 1 };
+        public uint[] Map_To_xBox_Ids = { 1 };
+
         public uint ErrorCount = 0;
 
         public long lMinXVal = int.MinValue;
@@ -219,7 +224,9 @@ namespace MTOvJoyFeeder
         public string Instance_Type;
         public Guid Instance_GUID;
         public Guid Product_GUID;
-        public uint[] Map_To_Virtual_Ids = { 1 };
+
+        public uint[] Map_To_vJoyDevice_Ids = { };
+        public uint[] Map_To_xBox_Ids = { 1 };
 
         public double Percentage_Slack = .01;
 

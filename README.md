@@ -30,6 +30,7 @@ In the above scenario left movement might appear erratic as the two joysticks ch
 
 ### Todo (in order of importance):
 
+* Force releasing only vXbox joysticks referenced in config or all of them if specified on the command line or app.config
 * Create Windows Service
 * Determine current support for Force Feedback in vJoy
 * Test with all available joysticks
@@ -55,3 +56,10 @@ In the above scenario left movement might appear erratic as the two joysticks ch
 * Added better configuration/command line handling.
 * Added support for multiple virtual controls associated with physical controllers
 * Added config support for SleepTime
+
+* Realised vJoy doesn't emulate xBox controllers!
+* Converted using vJoyInterface to vGenInterface to get both vJoy and xBox controller support
+* Found out plugining in xBox controllers in vGenInterface is buggy and didn't work
+* Added vXboxInderface.dll support using vXboxInterfaceWrap.cs, kept vGen interface for vJoy
+* In process of wiring up vitual controls to xBox
+* Added an onExit routine to release vXBox joysticks
