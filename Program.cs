@@ -133,6 +133,18 @@ namespace MTOvJoyFeeder
                     oNewVJoystickInfo.id = iSlot;
                     oNewVJoystickInfo.ControlerType = DevType.vXbox;
 
+                    oNewVJoystickInfo.lMinXVal = Range.MinXVal;
+                    oNewVJoystickInfo.lMaxXVal = Range.MaxXVal;
+                    oNewVJoystickInfo.lMinYVal = Range.MinYVal;
+                    oNewVJoystickInfo.lMaxYVal = Range.MaxYVal;
+                    oNewVJoystickInfo.lMinZVal = Range.MinZVal;
+                    oNewVJoystickInfo.lMaxZVal = Range.MaxZVal;
+
+                    oNewVJoystickInfo.lMinRXVal = Range.MinRXVal;
+                    oNewVJoystickInfo.lMaxRXVal = Range.MaxRXVal;
+                    oNewVJoystickInfo.lMinRYVal = Range.MinRYVal;
+                    oNewVJoystickInfo.lMaxRYVal = Range.MaxRYVal;
+
                     oAllVJoystickInfo.Add(oNewVJoystickInfo);
                 }
             }
@@ -627,7 +639,7 @@ namespace MTOvJoyFeeder
                         }
                         else
                         {
-                            WriteToEventLog("\t\tNot supported");
+                            vXboxInterface.SetZAxis(iVJoystickId, (short)iNormalizedValue);
                         }
 #if DEBUG
                         WriteToEventLog(String.Format("\t{0} - {1}", oJoystickInfo.oDeviceInstance.InstanceName.Trim(), oState));
@@ -770,7 +782,7 @@ namespace MTOvJoyFeeder
                             }
                             else
                             {
-                                vXboxInterface.SetBtn(oState.Value != 0, iVJoystickId, (1 + oJoystickInfo.Map_Buttons[iButtonNumber]));
+                                vXboxInterface.SetBtn(oState.Value != 0, iVJoystickId, oJoystickInfo.Map_Buttons[iButtonNumber]);
                             }
 #if DEBUG
                             WriteToEventLog(String.Format("\t\tMapped to Button {0}", oJoystickInfo.Map_Buttons[iButtonNumber]));

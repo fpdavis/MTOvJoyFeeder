@@ -30,6 +30,8 @@ In the above scenario left movement might appear erratic as the two joysticks ch
 
 ### Todo (in order of importance):
 
+* Wire up Diagonals on DPad for XBox Controller
+* Validate All XBox inputs
 * Force releasing only vXbox joysticks referenced in config or all of them if specified on the command line or app.config
 * Create Windows Service
 * Determine current support for Force Feedback in vJoy
@@ -63,3 +65,5 @@ In the above scenario left movement might appear erratic as the two joysticks ch
 * Added vXboxInderface.dll support using vXboxInterfaceWrap.cs, kept vGen interface for vJoy
 * In process of wiring up vitual controls to xBox
 * Added an onExit routine to release vXBox joysticks
+
+* Normalized and wired up Z Axis

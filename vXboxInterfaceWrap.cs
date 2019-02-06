@@ -8,19 +8,34 @@ namespace vXboxInterfaceWrap
         ushort wRightMotorSpeed;
     }
 
-    public enum DPadState
+    public struct DPadState
     {
-              Off = -1,
+        public const int Off = -1;
 
-            North = 0,
-        NorthEast = 4500,
-             East = 9000,
-        SouthEast = 13500,
-            South = 18000,
-        SouthWest = 22500,
-             West = 27000,
-        NorthWest = 31500
+        public const int North = 0;
+        public const int NorthEast = 4500;
+        public const int East = 9000;
+        public const int SouthEast = 13500;
+        public const int South = 18000;
+        public const int SouthWest = 22500;
+        public const int West = 27000;
+        public const int NorthWest = 31500;
     };
+
+    public struct Range
+    {
+        public const int MinXVal = -32768;
+        public const int MaxXVal = 32768;
+        public const int MinYVal = -32768;
+        public const int MaxYVal = 32768;
+        public const int MinZVal = -255;
+        public const int MaxZVal = 255;
+
+        public const int MinRXVal = -32768;
+        public const int MaxRXVal = 32768;
+        public const int MinRYVal = -32768;
+        public const int MaxRYVal = 32768;        
+    }
 
     class vXboxInterface
     {
@@ -79,19 +94,19 @@ namespace vXboxInterfaceWrap
                 case 3:
                     return SetBtnY(UserIndex, Press);
                 case 4:
-                    return SetBtnY(UserIndex, Press);
-                case 5:
                     return SetBtnLT(UserIndex, Press);
+                case 5:
+                    return SetBtnRT(UserIndex, Press);
                 case 6:
                     return SetBtnRT(UserIndex, Press);
                 case 7:
                     return SetBtnStart(UserIndex, Press);
-                case 8:
-                    return SetBtnBack(UserIndex, Press);
-                case 9:
+                case 8:                    
                     return SetBtnLB(UserIndex, Press);
-                case 10:
+                case 9:
                     return SetBtnRB(UserIndex, Press);
+                case 10:
+                    return SetBtnBack(UserIndex, Press);
                 default:
                     return false;
             }
@@ -99,11 +114,32 @@ namespace vXboxInterfaceWrap
 
         #endregion
 
+        #region Data Feeding Functions - SetZAxis
         [DllImport("vXboxInterface.dll")]
         public static extern bool SetTriggerL(uint UserIndex, byte Value);
         [DllImport("vXboxInterface.dll")]
         public static extern bool SetTriggerR(uint UserIndex, byte Value);
-        
+
+        public static bool SetZAxis(uint UserIndex, short Value)
+        {
+            if (Value < -2)
+            {
+                SetTriggerL(UserIndex, (byte)System.Math.Abs(Value));
+            }
+            else if (Value > 2)
+            {
+                SetTriggerR(UserIndex, (byte)Value);
+            }
+            else
+            {
+                SetTriggerL(UserIndex, 0);
+                SetTriggerR(UserIndex, 0);
+            }
+
+            return true;
+        }
+        #endregion
+
         #region Data Feeding Functions - SetAxis
         [DllImport("vXboxInterface.dll")]
         public static extern bool SetAxisX(uint UserIndex, short Value);
@@ -146,39 +182,39 @@ namespace vXboxInterfaceWrap
 
         public static bool SetDpad(uint UserIndex, int Value)
         {
-            if (Value == (int)DPadState.North)
+            if (Value == DPadState.North)
             {
                 return SetDpadUp(UserIndex);
             }
-            else if (Value == (int)DPadState.NorthEast)
+            else if (Value == DPadState.NorthEast)
             {
                 return SetDpadUp(UserIndex) && SetDpadRight(UserIndex);
             }
-            else if (Value == (int)DPadState.South)
+            else if (Value == DPadState.South)
             {
                 return SetDpadDown(UserIndex);
             }
-            else if (Value == (int)DPadState.SouthEast)
+            else if (Value == DPadState.SouthEast)
             {
                 return SetDpadDown(UserIndex) && SetDpadRight(UserIndex);
             }
-            else if (Value == (int)DPadState.West)
+            else if (Value == DPadState.West)
             {
                 return SetDpadLeft(UserIndex);
             }
-            else if (Value == (int)DPadState.SouthWest)
+            else if (Value == DPadState.SouthWest)
             {
                 return SetDpadDown(UserIndex) && SetDpadLeft(UserIndex);
             }
-            else if (Value == (int)DPadState.East)
+            else if (Value == DPadState.East)
             {
                 return SetDpadRight(UserIndex);
             }
-            else if (Value == (int)DPadState.NorthWest)
+            else if (Value == DPadState.NorthWest)
             {
                 return SetDpadUp(UserIndex) && SetDpadLeft(UserIndex);
             }
-            else if (Value == (int)DPadState.Off)
+            else if (Value == DPadState.Off)
                 return SetDpadOff(UserIndex);
             else
             {
