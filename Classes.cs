@@ -149,6 +149,8 @@ namespace MTOvJoyFeeder
 
         public DevType ControlerType = DevType.vXbox;
 
+        public vXboxInterfaceWrap.PXINPUT_VIBRATION pVib = new vXboxInterfaceWrap.PXINPUT_VIBRATION();
+
         public long lMinXVal = int.MaxValue;
         public long lMaxXVal = int.MaxValue;
         public long lMinYVal = int.MaxValue;

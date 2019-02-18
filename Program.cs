@@ -24,7 +24,7 @@ namespace MTOvJoyFeeder
 
         static public vGen oVirtualJoystick;
         static public Options goOptions;
-
+        
         private delegate bool EventHandler(CtrlType oCtrlType);
         static EventHandler oEventHandler;       
         enum CtrlType
@@ -396,8 +396,9 @@ namespace MTOvJoyFeeder
                             oNewJoystickInfo.lMinRYVal = oObjectProperties.Range.Minimum;
                             oNewJoystickInfo.lMaxRYVal = oObjectProperties.Range.Maximum;
                             oNewJoystickInfo.PercentRY = (oNewJoystickInfo.lMaxRYVal - oNewJoystickInfo.lMinRYVal) * oNewJoystickInfo.PercentageSlack;
-                            WriteToEventLog(String.Format("\t{0}\tYes ({1}, {2})", oJoystickObject.Name, oObjectProperties.Range.Minimum, oObjectProperties.Range.Maximum));
                             oNewJoystickInfo.Map_RotationY = StringToHID_USAGES(oThisJoystickConfig.Map_RotationY);
+
+                            WriteToEventLog(String.Format("\t{0}\tYes ({1}, {2})", oJoystickObject.Name, oObjectProperties.Range.Minimum, oObjectProperties.Range.Maximum));
 
                             break;
                         case "Z Rotation:":
@@ -452,11 +453,11 @@ namespace MTOvJoyFeeder
                     return JoystickOffset.Y;
                 case "Z":
                     return JoystickOffset.Z;
-                case "RotationX":
+                case "ROTATIONX":
                     return JoystickOffset.RotationX;
-                case "RotationY":
+                case "ROTATIONY":
                     return JoystickOffset.RotationY;
-                case "RotationZ":
+                case "ROTATIONZ":
                     return JoystickOffset.RotationZ;
             }
 
@@ -473,11 +474,11 @@ namespace MTOvJoyFeeder
                     return HID_USAGES.HID_USAGE_Y;
                 case "Z":
                     return HID_USAGES.HID_USAGE_Z;
-                case "RotationX":
+                case "ROTATIONX":
                     return HID_USAGES.HID_USAGE_RX;
-                case "RotationY":
+                case "ROTATIONY":
                     return HID_USAGES.HID_USAGE_RY;
-                case "RotationZ":
+                case "ROTATIONZ":
                     return HID_USAGES.HID_USAGE_RZ;
             }
 
@@ -511,6 +512,7 @@ namespace MTOvJoyFeeder
             if (oAllVJoystickInfo.Count == 0 || oAllJoystickInfo.Count == 0) return;
 
             WriteToEventLog("\nMonitoring for events.\n");
+
             JoystickUpdate[] oBufferedData;
             JoystickInfo oJoystickInfo;
             int iSleepTime = goOptions.SleepTime;
@@ -561,6 +563,14 @@ namespace MTOvJoyFeeder
                             foreach (var oState in oBufferedData)
                             {
                                 SendCommand(iVJoystickId, oJoystickInfo, oThisVJoystickInfo, oState);
+                            }
+
+                            // Check for force feedback                            
+                            if (vXboxInterface.GetVibration(iVJoystickId, ref oThisVJoystickInfo.pVib))
+                            {
+#if DEBUG
+                             //   WriteToEventLog($"\t\tGetVibration: {oThisVJoystickInfo.pVib.wLeftMotorSpeed}, {oThisVJoystickInfo.pVib.wRightMotorSpeed}");
+#endif
                             }
                         }
 
@@ -716,7 +726,7 @@ namespace MTOvJoyFeeder
                     }
                     else
                     {
-                        vXboxInterface.SetDpad(iVJoystickId, oState.Value);
+                        vXboxInterface.SetDpadByValue(iVJoystickId, oState.Value);
                     }
 #if DEBUG
                     WriteToEventLog(String.Format("\t{0} - {1}", oJoystickInfo.oDeviceInstance.InstanceName.Trim(), oState));

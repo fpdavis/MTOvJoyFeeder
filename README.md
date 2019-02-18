@@ -30,17 +30,16 @@ In the above scenario left movement might appear erratic as the two joysticks ch
 
 ### Todo (in order of importance):
 
-* Wire up Diagonals on DPad for XBox Controller
-* Validate All XBox inputs
-* Force releasing only vXbox joysticks referenced in config or all of them if specified on the command line or app.config
-* Create Windows Service
-* Determine current support for Force Feedback in vJoy
+* Determine current support for Force Feedback in vJoy/vXbox/SharpDX
 * Test with all available joysticks
+* Create Windows Service
 * Create Launchbox plugin
+* Force releasing only vXbox joysticks referenced in config or all of them if specified on the command line or app.config
 * Add timer to detect controllers when they are added
-* Need to load state for PointOfViewControllers1 PointOfViewControllers3
+* Need to load state for PointOfViewControllers1 - PointOfViewControllers3
 * Investigate implementing oJoystickInfo.oJoystick.SetNotification()
 * Clean up some calls to WriteToEventLog that are using String.Format
+* Wire up Guide button when SharpDX supports it - https://github.com/sharpdx/SharpDX/issues/1074
 
 ### Changes (oldest to newest):
 
@@ -67,3 +66,6 @@ In the above scenario left movement might appear erratic as the two joysticks ch
 * Added an onExit routine to release vXBox joysticks
 
 * Normalized and wired up Z Axis
+
+* Wired up Diagonals on DPad for XBox Controller
+* Validated All XBox inputs - Guide Button is the only one left to wire up.

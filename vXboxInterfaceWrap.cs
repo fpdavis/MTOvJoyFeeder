@@ -4,8 +4,8 @@ namespace vXboxInterfaceWrap
 {
     public struct PXINPUT_VIBRATION
     {
-        ushort wLeftMotorSpeed;
-        ushort wRightMotorSpeed;
+        public ushort wLeftMotorSpeed;
+        public ushort wRightMotorSpeed;
     }
 
     public struct DPadState
@@ -20,7 +20,54 @@ namespace vXboxInterfaceWrap
         public const int SouthWest = 22500;
         public const int West = 27000;
         public const int NorthWest = 31500;
+
     };
+
+    // https://docs.microsoft.com/en-us/windows/desktop/api/xinput/ns-xinput-_xinput_gamepad
+    //
+    //
+    //  Bits that are set but not defined below are reserved, and their state is undefined.
+    //
+    //  bLeftTrigger
+    //
+    //      The current value of the left trigger analog control.The value is between 0 and 255.
+    //
+    //  bRightTrigger
+    //
+    //      The current value of the right trigger analog control.The value is between 0 and 255.
+    //
+    //  sThumbLX
+    //
+    //      Left thumbstick x-axis value. Each of the thumbstick axis members is a signed value between -32768 and 32767 describing the position of the thumbstick. A value of 0 is centered.Negative values signify down or to the left. Positive values signify up or to the right. The constants XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE or XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE can be used as a positive and negative value to filter a thumbstick input.
+    //
+    //  sThumbLY
+    //
+    //      Left thumbstick y-axis value. The value is between -32768 and 32767.
+    //
+    //  sThumbRX
+    //
+    //      Right thumbstick x-axis value. The value is between -32768 and 32767.
+    //
+    //  sThumbRY
+    //
+    //      Right thumbstick y-axis value. The value is between -32768 and 32767.
+    public struct XINPUT_GAMEPAD
+    {
+        public const int DPAD_UP = 0x0001;
+        public const int DPAD_DOWN = 0x0002;
+        public const int DPAD_LEFT = 0x0004;
+        public const int DPAD_RIGHT = 0x0008;
+        public const int START = 0x0010;
+        public const int BACK = 0x0020;
+        public const int LEFT_THUMB = 0x0040;
+        public const int RIGHT_THUMB = 0x0080;
+        public const int LEFT_SHOULDER = 0x0100;
+        public const int RIGHT_SHOULDER = 0x0200;
+        public const int A = 0x1000;
+        public const int B = 0x2000;
+        public const int X = 0x4000;
+        public const int Y = 0x8000;
+    }
 
     public struct Range
     {
@@ -178,9 +225,11 @@ namespace vXboxInterfaceWrap
         [DllImport("vXboxInterface.dll")]
         public static extern bool SetDpadRight(uint UserIndex);
         [DllImport("vXboxInterface.dll")]
+        private static extern bool SetDpad(uint UserIndex, int Value);
+        [DllImport("vXboxInterface.dll")]
         public static extern bool SetDpadOff(uint UserIndex);
 
-        public static bool SetDpad(uint UserIndex, int Value)
+        public static bool SetDpadByValue(uint UserIndex, int Value)
         {
             if (Value == DPadState.North)
             {
@@ -188,7 +237,7 @@ namespace vXboxInterfaceWrap
             }
             else if (Value == DPadState.NorthEast)
             {
-                return SetDpadUp(UserIndex) && SetDpadRight(UserIndex);
+                return SetDpad(UserIndex, XINPUT_GAMEPAD.DPAD_UP | XINPUT_GAMEPAD.DPAD_RIGHT);
             }
             else if (Value == DPadState.South)
             {
@@ -196,7 +245,7 @@ namespace vXboxInterfaceWrap
             }
             else if (Value == DPadState.SouthEast)
             {
-                return SetDpadDown(UserIndex) && SetDpadRight(UserIndex);
+                return SetDpad(UserIndex, XINPUT_GAMEPAD.DPAD_DOWN | XINPUT_GAMEPAD.DPAD_RIGHT);
             }
             else if (Value == DPadState.West)
             {
@@ -204,7 +253,7 @@ namespace vXboxInterfaceWrap
             }
             else if (Value == DPadState.SouthWest)
             {
-                return SetDpadDown(UserIndex) && SetDpadLeft(UserIndex);
+                return SetDpad(UserIndex, XINPUT_GAMEPAD.DPAD_DOWN | XINPUT_GAMEPAD.DPAD_LEFT);
             }
             else if (Value == DPadState.East)
             {
@@ -212,7 +261,7 @@ namespace vXboxInterfaceWrap
             }
             else if (Value == DPadState.NorthWest)
             {
-                return SetDpadUp(UserIndex) && SetDpadLeft(UserIndex);
+                return SetDpad(UserIndex, XINPUT_GAMEPAD.DPAD_UP | XINPUT_GAMEPAD.DPAD_LEFT);
             }
             else if (Value == DPadState.Off)
                 return SetDpadOff(UserIndex);
@@ -227,7 +276,7 @@ namespace vXboxInterfaceWrap
         [DllImport("vXboxInterface.dll")]
         public static extern bool GetLedNumber(uint UserIndex, ref byte pLed);
         [DllImport("vXboxInterface.dll")]
-        public static extern bool GetVibration(uint UserIndex, PXINPUT_VIBRATION pVib);
+        public static extern bool GetVibration(uint UserIndex, ref PXINPUT_VIBRATION pVib);
         #endregion
     }
 }
