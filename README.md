@@ -68,4 +68,8 @@ In the above scenario left movement might appear erratic as the two joysticks ch
 * Normalized and wired up Z Axis
 
 * Wired up Diagonals on DPad for XBox Controller
-* Validated All XBox inputs - Guide Button is the only one left to wire up.
+* Validated All XBox inputs - Guide Button is the only one left to wire up
+
+* Upgraded packages 
+* Added shell for Windows Service
+* Moved console application to its own directory

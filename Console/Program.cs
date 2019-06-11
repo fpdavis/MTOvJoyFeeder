@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using CommandLine;
 using SharpDX.DirectInput;
+using SharpDX.XInput;
 using vGenInterfaceWrap;
 using vXboxInterfaceWrap;
 using System.Linq;
@@ -547,7 +548,7 @@ namespace MTOvJoyFeeder
                                 oAllJoystickInfo.Remove(oJoystickInfo);
                             }
                         }
-
+                        
 #if DEBUG
                         WriteToEventLog(String.Format("\tException ({0}): {1}", oJoystickInfo.ErrorCount, oException.Message));
 #endif
@@ -568,8 +569,18 @@ namespace MTOvJoyFeeder
                             // Check for force feedback                            
                             if (vXboxInterface.GetVibration(iVJoystickId, ref oThisVJoystickInfo.pVib))
                             {
+                                //Vibration vibration = new Vibration();
+                                //vibration.LeftMotorSpeed = oThisVJoystickInfo.pVib.wLeftMotorSpeed;
+                                //vibration.RightMotorSpeed = oThisVJoystickInfo.pVib.wRightMotorSpeed;
+                                //Controller controller = new Controller(UserIndex.Two);
+                                ////controller.GetType()
+
+                                //DeviceQueryType devicequerytype = new DeviceQueryType();
+                                //devicequerytype = DeviceQueryType.Gamepad;
+                                //controller.SetVibration(vibration);
+
 #if DEBUG
-                             //   WriteToEventLog($"\t\tGetVibration: {oThisVJoystickInfo.pVib.wLeftMotorSpeed}, {oThisVJoystickInfo.pVib.wRightMotorSpeed}");
+                                //   WriteToEventLog($"\t\tGetVibration: {oThisVJoystickInfo.pVib.wLeftMotorSpeed}, {oThisVJoystickInfo.pVib.wRightMotorSpeed}");
 #endif
                             }
                         }
