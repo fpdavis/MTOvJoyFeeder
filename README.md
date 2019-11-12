@@ -1,6 +1,8 @@
 # MTOvJoyFeeder
 Many To One (technically many to many) Virtual Joystick Feeder. Maps one or more physical joysticks to one virtual joystick.
 
+This project is based on https://github.com/shauleiz/vJoy and requires vJoy to be installed and working.
+
 A few scenarios where this might be useful:
 
 * Combine input from two controllers into one virtual controller such as a flight stick and throttle. Allowing each controller to feed information to a different set of buttons/axis.
@@ -30,6 +32,10 @@ In the above scenario left movement might appear erratic as the two joysticks ch
 
 ### Todo (in order of importance):
 
+* Need to add to invert negative direction as physical controllers left and up is the lowest number and with the virtual xBox controller left and down is the lowest number
+* Add batch file to build to copy out files dll dependancies
+* Dynamically set size of oNewJoystickInfo.Map_Buttons array
+* Improved documentation/installation instructions
 * Determine current support for Force Feedback in vJoy/vXbox/SharpDX
 * Test with all available joysticks
 * Create Windows Service
@@ -73,3 +79,8 @@ In the above scenario left movement might appear erratic as the two joysticks ch
 * Upgraded packages 
 * Added shell for Windows Service
 * Moved console application to its own directory
+
+* Cleaned up debug code
+* Added output for release mode
+* Improved vxBox ReleasevXboxJoysticks method
+* Fixed max value for in vXboxInterfaceWrap as it was 1 higher than it should have been causing the number to go negative on conversion to a Short

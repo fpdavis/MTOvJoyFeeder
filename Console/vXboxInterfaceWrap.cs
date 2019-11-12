@@ -38,7 +38,12 @@ namespace vXboxInterfaceWrap
     //
     //  sThumbLX
     //
-    //      Left thumbstick x-axis value. Each of the thumbstick axis members is a signed value between -32768 and 32767 describing the position of the thumbstick. A value of 0 is centered.Negative values signify down or to the left. Positive values signify up or to the right. The constants XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE or XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE can be used as a positive and negative value to filter a thumbstick input.
+    //      Left thumbstick x-axis value. Each of the thumbstick axis members is a signed value 
+    //      between -32768 and 32767 describing the position of the thumbstick. A value of 0 is 
+    //      centered. Negative values signify down or to the left. Positive values signify up or
+    //      to the right. The constants XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE or 
+    //      XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE can be used as a positive and negative value
+    //      to filter a thumbstick input.
     //
     //  sThumbLY
     //
@@ -72,16 +77,16 @@ namespace vXboxInterfaceWrap
     public struct Range
     {
         public const int MinXVal = -32768;
-        public const int MaxXVal = 32768;
+        public const int MaxXVal = 32767;
         public const int MinYVal = -32768;
-        public const int MaxYVal = 32768;
+        public const int MaxYVal = 32767;
         public const int MinZVal = -255;
         public const int MaxZVal = 255;
 
         public const int MinRXVal = -32768;
-        public const int MaxRXVal = 32768;
+        public const int MaxRXVal = 32767;
         public const int MinRYVal = -32768;
-        public const int MaxRYVal = 32768;        
+        public const int MaxRYVal = 32767;        
     }
 
     class vXboxInterface
@@ -94,7 +99,7 @@ namespace vXboxInterfaceWrap
         [DllImport("vXboxInterface.dll")]
         public static extern bool isControllerExists(uint UserIndex);
         [DllImport("vXboxInterface.dll")]
-        public static extern bool isControllerOwned(uint UserIndex);
+        public static extern bool isControllerOwned(uint UserIndex);                
         #endregion
 
         #region Plugged-in/Unplug Functions

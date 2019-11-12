@@ -49,7 +49,7 @@ namespace MTOvJoyFeeder
 
         private static void WriteConfigFile(List<JoystickConfig> oJoystickConfig)
         {
-            File.WriteAllText(Program.goOptions.ConfigFile, JsonConvert.SerializeObject(oJoystickConfig));
+            File.WriteAllText(Program.goOptions.ConfigFile, JsonConvert.SerializeObject(oJoystickConfig, Formatting.Indented));
         }
 
     }

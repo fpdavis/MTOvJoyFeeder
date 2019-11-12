@@ -127,6 +127,21 @@ namespace MTOvJoyFeeder
             set { _EnableEventLogging = value; }
         }
 
+        [Option('f', "EnableUnPlugForce", Required = false, HelpText = "On exit unplugs ALL virtual controllers controlled by any application, default is false. [-f true]")]
+        private Nullable<Boolean> _EnableUnPlugForce { get; set; }
+        public Boolean EnableUnPlugForce
+        {
+            get
+            {
+                if (_EnableUnPlugForce.HasValue) return (Boolean)_EnableUnPlugForce;
+
+                _EnableUnPlugForce = Boolean.TryParse(ConfigurationManager.AppSettings["EnableUnPlugForce"], out Boolean bReturn) ? bReturn : false;
+
+                return (Boolean)_EnableUnPlugForce;
+            }
+            set { _EnableUnPlugForce = value; }
+        }
+
         [Option('t', "SleepTime", Required = false, HelpText = "Milliseconds to sleep between buffer checks. [-t 50]")]
         private Nullable<int> _SleepTime { get; set; }
         public int SleepTime
@@ -216,7 +231,7 @@ namespace MTOvJoyFeeder
         public uint Map_PointOfViewControllers2 = 2;
         public uint Map_PointOfViewControllers3 = 3;
 
-        public uint[] Map_Buttons = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 }; // SharpDX.DirectInput.JoystickOffset.Buttons0;
+        public uint[] Map_Buttons = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 }; // SharpDX.DirectInput.JoystickOffset.Buttons0;
     }
 
     public class JoystickConfig
@@ -245,6 +260,6 @@ namespace MTOvJoyFeeder
         public uint Map_PointOfViewControllers2 = 2; // SharpDX.DirectInput.JoystickOffset.PointOfViewControllers2;
         public uint Map_PointOfViewControllers3 = 3; // SharpDX.DirectInput.JoystickOffset.PointOfViewControllers3;
 
-        public uint[] Map_Buttons = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 }; // SharpDX.DirectInput.JoystickOffset.Buttons0;
+        public uint[] Map_Buttons = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 }; // SharpDX.DirectInput.JoystickOffset.Buttons0;
     }
 }
