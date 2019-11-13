@@ -78,15 +78,18 @@ namespace vXboxInterfaceWrap
     {
         public const int MinXVal = -32768;
         public const int MaxXVal = 32767;
+        
         public const int MinYVal = -32768;
         public const int MaxYVal = 32767;
+
         public const int MinZVal = -255;
         public const int MaxZVal = 255;
 
         public const int MinRXVal = -32768;
         public const int MaxRXVal = 32767;
+
         public const int MinRYVal = -32768;
-        public const int MaxRYVal = 32767;        
+        public const int MaxRYVal = 32767;
     }
 
     class vXboxInterface
@@ -201,9 +204,11 @@ namespace vXboxInterfaceWrap
         public static extern bool SetAxisRx(uint UserIndex, short Value);
         [DllImport("vXboxInterface.dll")]
         public static extern bool SetAxisRy(uint UserIndex, short Value);
+        [DllImport("vXboxInterface.dll")]
+        public static extern bool SetAxisRz(uint UserIndex, short Value);
 
         public static bool SetAxis(uint UserIndex, short Value, HID_USAGES Map_To)
-        {
+        {            
             switch (Map_To)
             {
                 case HID_USAGES.HID_USAGE_X:

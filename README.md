@@ -32,16 +32,15 @@ In the above scenario left movement might appear erratic as the two joysticks ch
 
 ### Todo (in order of importance):
 
-* Need to add to invert negative direction as physical controllers left and up is the lowest number and with the virtual xBox controller left and down is the lowest number
-* Add batch file to build to copy out files dll dependancies
+* NormalizeRange() is untested
 * Dynamically set size of oNewJoystickInfo.Map_Buttons array
+* Add batch file to build to copy out files dll dependancies
 * Improved documentation/installation instructions
 * Determine current support for Force Feedback in vJoy/vXbox/SharpDX
 * Test with all available joysticks
+* Add timer to detect controllers when they are added
 * Create Windows Service
 * Create Launchbox plugin
-* Force releasing only vXbox joysticks referenced in config or all of them if specified on the command line or app.config
-* Add timer to detect controllers when they are added
 * Need to load state for PointOfViewControllers1 - PointOfViewControllers3
 * Investigate implementing oJoystickInfo.oJoystick.SetNotification()
 * Clean up some calls to WriteToEventLog that are using String.Format
@@ -84,3 +83,6 @@ In the above scenario left movement might appear erratic as the two joysticks ch
 * Added output for release mode
 * Improved vxBox ReleasevXboxJoysticks method
 * Fixed max value for in vXboxInterfaceWrap as it was 1 higher than it should have been causing the number to go negative on conversion to a Short
+
+* Added inversion option to physical joysticks an support in NormalizeRange(), normally the Y Axis will be inverted for XBox controllers
+* Added Ranges For X, Y, Z, RX, RY for controllers and virtual controllers for use by NormalizeRange() 

@@ -168,17 +168,33 @@ namespace MTOvJoyFeeder
 
         public long lMinXVal = int.MaxValue;
         public long lMaxXVal = int.MaxValue;
+        public long lXRange  = int.MaxValue;
+        public long lMinPlusMaxX;
+        
         public long lMinYVal = int.MaxValue;
         public long lMaxYVal = int.MaxValue;
+        public long lYRange  = int.MaxValue;
+        public long lMinPlusMaxY;
+
         public long lMinZVal = int.MaxValue;
         public long lMaxZVal = int.MaxValue;
+        public long lZRange  = int.MaxValue;
+        public long lMinPlusMaxZ;
 
         public long lMinRXVal = int.MaxValue;
         public long lMaxRXVal = int.MaxValue;
+        public long lRXRange  = int.MaxValue;
+        public long lMinPlusMaxRX;
+
         public long lMinRYVal = int.MaxValue;
         public long lMaxRYVal = int.MaxValue;
+        public long lRYRange  = int.MaxValue;
+        public long lMinPlusMaxRY;
+
         public long lMinRZVal = int.MaxValue;
         public long lMaxRZVal = int.MaxValue;
+        public long lRZRange  = int.MaxValue;
+        public long lMinPlusMaxRZ;
     }
 
     public class JoystickInfo
@@ -194,17 +210,39 @@ namespace MTOvJoyFeeder
 
         public long lMinXVal = int.MinValue;
         public long lMaxXVal = int.MaxValue;
+        public bool bInvertX = false;
+        public long lMinPlusMaxX;
+        public long lXRange;
+        
         public long lMinYVal = int.MinValue;
         public long lMaxYVal = int.MaxValue;
+        public bool bInvertY = false;
+        public long lMinPlusMaxY;
+        public long lYRange;
+
         public long lMinZVal = int.MinValue;
         public long lMaxZVal = int.MaxValue;
+        public bool bInvertZ = false;
+        public long lMinPlusMaxZY;
+        public long lZRange;        
 
         public long lMinRXVal = int.MinValue;
         public long lMaxRXVal = int.MaxValue;
+        public bool bInvertRX = false;
+        public long lMinPlusMaxRX;
+        public long lRXRange;        
+
         public long lMinRYVal = int.MinValue;
         public long lMaxRYVal = int.MaxValue;
+        public bool bInvertRY = false;
+        public long lMinPlusMaxRY;
+        public long lRYRange;
+
         public long lMinRZVal = int.MinValue;
-        public long lMaxRZVal = int.MaxValue;
+        public long lMaxRZVal = int.MaxValue;        
+        public bool bInvertRZ = false;
+        public long lMinPlusMaxRZ;
+        public long lRZRange;
 
         public long lPreviousX, lPreviousY, lPreviousZ;
         public long PreviousRX, PreviousRY, PreviousRZ;

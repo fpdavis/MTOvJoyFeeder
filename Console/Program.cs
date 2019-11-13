@@ -135,15 +135,28 @@ namespace MTOvJoyFeeder
 
                     oNewVJoystickInfo.lMinXVal = Range.MinXVal;
                     oNewVJoystickInfo.lMaxXVal = Range.MaxXVal;
+                    oNewVJoystickInfo.lXRange  = Range.MaxXVal - Range.MinXVal;
+                    oNewVJoystickInfo.lMinPlusMaxX = Range.MaxXVal + Range.MinXVal;
+
                     oNewVJoystickInfo.lMinYVal = Range.MinYVal;
                     oNewVJoystickInfo.lMaxYVal = Range.MaxYVal;
+                    oNewVJoystickInfo.lYRange  = Range.MaxYVal - Range.MinYVal;
+                    oNewVJoystickInfo.lMinPlusMaxY = Range.MaxYVal + Range.MinYVal;
+
                     oNewVJoystickInfo.lMinZVal = Range.MinZVal;
                     oNewVJoystickInfo.lMaxZVal = Range.MaxZVal;
+                    oNewVJoystickInfo.lZRange  = Range.MaxZVal - Range.MinZVal;
+                    oNewVJoystickInfo.lMinPlusMaxZ = Range.MaxZVal + Range.MinZVal;
 
                     oNewVJoystickInfo.lMinRXVal = Range.MinRXVal;
                     oNewVJoystickInfo.lMaxRXVal = Range.MaxRXVal;
+                    oNewVJoystickInfo.lRXRange  = Range.MaxRXVal - Range.MinRXVal;
+                    oNewVJoystickInfo.lMinPlusMaxRX = Range.MaxRXVal + Range.MinRXVal;
+
                     oNewVJoystickInfo.lMinRYVal = Range.MinRYVal;
                     oNewVJoystickInfo.lMaxRYVal = Range.MaxRYVal;
+                    oNewVJoystickInfo.lRYRange  = Range.MaxRYVal - Range.MinRYVal;
+                    oNewVJoystickInfo.lMinPlusMaxRY = Range.MaxRYVal + Range.MinRYVal;
 
                     oAllVJoystickInfo.Add(oNewVJoystickInfo);
 
@@ -264,6 +277,13 @@ namespace MTOvJoyFeeder
                 int ContPovNumber = oVirtualJoystick.GetVJDContPovNumber(id);
                 int DiscPovNumber = oVirtualJoystick.GetVJDDiscPovNumber(id);
 
+                // We make these calculations here one time for use in NormalizeRange()
+                oNewVJoystickInfo.lXRange  = oNewVJoystickInfo.lMaxXVal  - oNewVJoystickInfo.lMinXVal;
+                oNewVJoystickInfo.lYRange  = oNewVJoystickInfo.lMaxYVal  - oNewVJoystickInfo.lMinYVal;
+                oNewVJoystickInfo.lZRange  = oNewVJoystickInfo.lMaxZVal  - oNewVJoystickInfo.lMinZVal;
+                oNewVJoystickInfo.lRXRange = oNewVJoystickInfo.lMaxRXVal - oNewVJoystickInfo.lMinRXVal;
+                oNewVJoystickInfo.lRYRange = oNewVJoystickInfo.lMaxRYVal - oNewVJoystickInfo.lMinRYVal;
+
                 // Print results
                 WriteToEventLog($"\nvJoy Device {id} capabilities:\n");
                 WriteToEventLog($"\tNumber of buttons:\t\t{nButtons}");
@@ -375,6 +395,7 @@ namespace MTOvJoyFeeder
                         case "X Axis:":
                             oNewJoystickInfo.lMinXVal = oObjectProperties.Range.Minimum;
                             oNewJoystickInfo.lMaxXVal = oObjectProperties.Range.Maximum;
+                            oNewJoystickInfo.lXRange  = oObjectProperties.Range.Maximum - oObjectProperties.Range.Minimum;
                             oNewJoystickInfo.PercentX = (oNewJoystickInfo.lMaxXVal - oNewJoystickInfo.lMinXVal) * oNewJoystickInfo.PercentageSlack;
                             oNewJoystickInfo.Map_X = StringToHID_USAGES(oThisJoystickConfig.Map_X);
 
@@ -383,6 +404,7 @@ namespace MTOvJoyFeeder
                         case "Y Axis:":
                             oNewJoystickInfo.lMinYVal = oObjectProperties.Range.Minimum;
                             oNewJoystickInfo.lMaxYVal = oObjectProperties.Range.Maximum;
+                            oNewJoystickInfo.lYRange  = oObjectProperties.Range.Maximum - oObjectProperties.Range.Minimum;
                             oNewJoystickInfo.PercentY = (oNewJoystickInfo.lMaxYVal - oNewJoystickInfo.lMinYVal) * oNewJoystickInfo.PercentageSlack;
                             oNewJoystickInfo.Map_Y = StringToHID_USAGES(oThisJoystickConfig.Map_Y);
 
@@ -391,6 +413,7 @@ namespace MTOvJoyFeeder
                         case "Z Axis:":
                             oNewJoystickInfo.lMinZVal = oObjectProperties.Range.Minimum;
                             oNewJoystickInfo.lMaxZVal = oObjectProperties.Range.Maximum;
+                            oNewJoystickInfo.lZRange = oObjectProperties.Range.Maximum - oObjectProperties.Range.Minimum;
                             oNewJoystickInfo.PercentZ = (oNewJoystickInfo.lMaxZVal - oNewJoystickInfo.lMinZVal) * oNewJoystickInfo.PercentageSlack;
                             oNewJoystickInfo.Map_Z = StringToHID_USAGES(oThisJoystickConfig.Map_Z);
 
@@ -400,6 +423,7 @@ namespace MTOvJoyFeeder
                         case "X Rotation:":
                             oNewJoystickInfo.lMinRXVal = oObjectProperties.Range.Minimum;
                             oNewJoystickInfo.lMaxRXVal = oObjectProperties.Range.Maximum;
+                            oNewJoystickInfo.lRXRange = oObjectProperties.Range.Maximum - oObjectProperties.Range.Minimum;
                             oNewJoystickInfo.PercentRX = (oNewJoystickInfo.lMaxRXVal - oNewJoystickInfo.lMinRXVal) * oNewJoystickInfo.PercentageSlack;
                             oNewJoystickInfo.Map_RotationX = StringToHID_USAGES(oThisJoystickConfig.Map_RotationX);
 
@@ -408,6 +432,7 @@ namespace MTOvJoyFeeder
                         case "Y Rotation:":
                             oNewJoystickInfo.lMinRYVal = oObjectProperties.Range.Minimum;
                             oNewJoystickInfo.lMaxRYVal = oObjectProperties.Range.Maximum;
+                            oNewJoystickInfo.lRYRange = oObjectProperties.Range.Maximum - oObjectProperties.Range.Minimum;
                             oNewJoystickInfo.PercentRY = (oNewJoystickInfo.lMaxRYVal - oNewJoystickInfo.lMinRYVal) * oNewJoystickInfo.PercentageSlack;
                             oNewJoystickInfo.Map_RotationY = StringToHID_USAGES(oThisJoystickConfig.Map_RotationY);
 
@@ -417,6 +442,7 @@ namespace MTOvJoyFeeder
                         case "Z Rotation:":
                             oNewJoystickInfo.lMinRZVal = oObjectProperties.Range.Minimum;
                             oNewJoystickInfo.lMaxRZVal = oObjectProperties.Range.Maximum;
+                            oNewJoystickInfo.lRZRange = oObjectProperties.Range.Maximum - oObjectProperties.Range.Minimum;
                             oNewJoystickInfo.PercentRZ = (oNewJoystickInfo.lMaxRZVal - oNewJoystickInfo.lMinRZVal) * oNewJoystickInfo.PercentageSlack;
                             oNewJoystickInfo.Map_RotationZ = StringToHID_USAGES(oThisJoystickConfig.Map_RotationZ);
 
@@ -630,7 +656,7 @@ namespace MTOvJoyFeeder
                     if (Math.Abs(oJoystickInfo.lPreviousX - oState.Value) > oJoystickInfo.PercentX)
                     {
                         oJoystickInfo.lPreviousX = oState.Value;
-                        iNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinXVal, oJoystickInfo.lMaxXVal, oThisVJoystickInfo.lMinXVal, oThisVJoystickInfo.lMaxXVal);
+                        iNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinXVal, oJoystickInfo.lXRange, oJoystickInfo.bInvertX, oThisVJoystickInfo.lMinXVal, oThisVJoystickInfo.lMinPlusMaxX, oThisVJoystickInfo.lXRange);
 
                         if (oThisVJoystickInfo.ControlerType == DevType.vJoy)
                         {
@@ -652,7 +678,7 @@ namespace MTOvJoyFeeder
                     if (Math.Abs(oJoystickInfo.lPreviousY - oState.Value) > oJoystickInfo.PercentY)
                     {
                         oJoystickInfo.lPreviousY = oState.Value;
-                        iNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinYVal, oJoystickInfo.lMaxYVal, oThisVJoystickInfo.lMinYVal, oThisVJoystickInfo.lMaxYVal);
+                        iNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinYVal, oJoystickInfo.lYRange, oJoystickInfo.bInvertY, oThisVJoystickInfo.lMinYVal, oThisVJoystickInfo.lMinPlusMaxY, oThisVJoystickInfo.lYRange);
 
                         if (oThisVJoystickInfo.ControlerType == DevType.vJoy)
                         {
@@ -674,7 +700,7 @@ namespace MTOvJoyFeeder
                     if (Math.Abs(oJoystickInfo.lPreviousZ - oState.Value) > oJoystickInfo.PercentZ)
                     {
                         oJoystickInfo.lPreviousZ = oState.Value;
-                        iNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinZVal, oJoystickInfo.lMaxZVal, oThisVJoystickInfo.lMinZVal, oThisVJoystickInfo.lMaxZVal);
+                        iNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinZVal, oJoystickInfo.lZRange, oJoystickInfo.bInvertZ, oThisVJoystickInfo.lMinZVal, oThisVJoystickInfo.lMinPlusMaxZ, oThisVJoystickInfo.lZRange);
 
                         if (oThisVJoystickInfo.ControlerType == DevType.vJoy)
                         {
@@ -697,7 +723,7 @@ namespace MTOvJoyFeeder
                     if (Math.Abs(oJoystickInfo.PreviousRX - oState.Value) > oJoystickInfo.PercentRX)
                     {
                         oJoystickInfo.PreviousRX = oState.Value;
-                        iNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinRXVal, oJoystickInfo.lMaxRXVal, oThisVJoystickInfo.lMinRXVal, oThisVJoystickInfo.lMaxRXVal);
+                        iNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinRXVal, oJoystickInfo.lRXRange, oJoystickInfo.bInvertRX, oThisVJoystickInfo.lMinRXVal, oThisVJoystickInfo.lMinPlusMaxRX, oThisVJoystickInfo.lRXRange);
 
                         if (oThisVJoystickInfo.ControlerType == DevType.vJoy)
                         {
@@ -719,7 +745,7 @@ namespace MTOvJoyFeeder
                     if (Math.Abs(oJoystickInfo.PreviousRY - oState.Value) > oJoystickInfo.PercentRY)
                     {
                         oJoystickInfo.PreviousRY = oState.Value;
-                        iNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinRYVal, oJoystickInfo.lMaxRYVal, oThisVJoystickInfo.lMinRYVal, oThisVJoystickInfo.lMaxRYVal);
+                        iNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinRYVal, oJoystickInfo.lRYRange, oJoystickInfo.bInvertRY, oThisVJoystickInfo.lMinRYVal, oThisVJoystickInfo.lMinPlusMaxRY, oThisVJoystickInfo.lRYRange);
 
                         if (oThisVJoystickInfo.ControlerType == DevType.vJoy)
                         {
@@ -741,7 +767,7 @@ namespace MTOvJoyFeeder
                     if (Math.Abs(oJoystickInfo.PreviousRZ - oState.Value) > oJoystickInfo.PercentRZ)
                     {
                         oJoystickInfo.PreviousRZ = oState.Value;
-                        iNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinRZVal, oJoystickInfo.lMaxRZVal, oThisVJoystickInfo.lMinRZVal, oThisVJoystickInfo.lMaxRZVal);
+                        iNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinRZVal, oJoystickInfo.lRZRange, oJoystickInfo.bInvertRZ, oThisVJoystickInfo.lMinRZVal, oThisVJoystickInfo.lMinPlusMaxRZ, oThisVJoystickInfo.lRZRange);
 
                         WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName.Trim(), oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_RotationZ));
 
@@ -846,15 +872,19 @@ namespace MTOvJoyFeeder
             }
         }
 
-        static int NormalizeRange(int num, long fromMin, long fromMax, long toMin, long toMax)
+        static int NormalizeRange(int num, long fromMin, decimal fromRange, bool invert, long toMin, long toMinPlusMax, long toRange)
         {
-            // TODO: Cache these ranges for each device
-            long lFromRange = fromMax - fromMin;
-            long lToRange = toMax - toMin;
+            decimal lReturn;
 
-            // TODO: Combine calculations to one line once caching is done
-            long lNumerater = num - fromMin;
-            decimal lReturn = toMin + lNumerater / (decimal)lFromRange * lToRange;
+            if (invert)
+            {
+                lReturn = toMinPlusMax - (toMin + (num - fromMin) / fromRange * toRange);
+            }
+            else
+            {
+                lReturn = toMin + (num - fromMin) / fromRange * toRange;
+                
+            }
 
             return (int)Math.Floor(lReturn);
         }
