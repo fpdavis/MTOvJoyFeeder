@@ -202,6 +202,7 @@ namespace MTOvJoyFeeder
         public DeviceInstance oDeviceInstance;
         public Joystick oJoystick;
         public IList<EffectInfo> oEffectInfo;
+        public JoystickConfig oJoystickConfig;
 
         public uint[] Map_To_vJoyDevice_Ids = { 1 };
         public uint[] Map_To_xBox_Ids = { 1 };
@@ -210,37 +211,31 @@ namespace MTOvJoyFeeder
 
         public long lMinXVal = int.MinValue;
         public long lMaxXVal = int.MaxValue;
-        public bool bInvertX = false;
         public long lMinPlusMaxX;
         public long lXRange;
         
         public long lMinYVal = int.MinValue;
         public long lMaxYVal = int.MaxValue;
-        public bool bInvertY = false;
         public long lMinPlusMaxY;
         public long lYRange;
 
         public long lMinZVal = int.MinValue;
         public long lMaxZVal = int.MaxValue;
-        public bool bInvertZ = false;
         public long lMinPlusMaxZY;
         public long lZRange;        
 
         public long lMinRXVal = int.MinValue;
         public long lMaxRXVal = int.MaxValue;
-        public bool bInvertRX = false;
         public long lMinPlusMaxRX;
         public long lRXRange;        
 
         public long lMinRYVal = int.MinValue;
         public long lMaxRYVal = int.MaxValue;
-        public bool bInvertRY = false;
         public long lMinPlusMaxRY;
         public long lRYRange;
 
         public long lMinRZVal = int.MinValue;
         public long lMaxRZVal = int.MaxValue;        
-        public bool bInvertRZ = false;
         public long lMinPlusMaxRZ;
         public long lRZRange;
 
@@ -268,8 +263,6 @@ namespace MTOvJoyFeeder
         public uint Map_PointOfViewControllers1 = 1;
         public uint Map_PointOfViewControllers2 = 2;
         public uint Map_PointOfViewControllers3 = 3;
-
-        public uint[] Map_Buttons = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 }; // SharpDX.DirectInput.JoystickOffset.Buttons0;
     }
 
     public class JoystickConfig
@@ -286,12 +279,18 @@ namespace MTOvJoyFeeder
         public double Percentage_Slack = .01;
 
         public string Map_X = "X"; // SharpDX.DirectInput.JoystickOffset.X;
+        public bool   Invert_X = false;
         public string Map_Y = "Y"; // SharpDX.DirectInput.JoystickOffset.Y;
+        public bool   Invert_Y = true;
         public string Map_Z = "Z"; // SharpDX.DirectInput.JoystickOffset.Z;
+        public bool   Invert_Z = false;
 
         public string Map_RotationX = "RotationX"; // SharpDX.DirectInput.JoystickOffset.RotationX;
+        public bool   Invert_RotationX = false;
         public string Map_RotationY = "RotationY"; // SharpDX.DirectInput.JoystickOffset.RotationY;
+        public bool   Invert_RotationY = false;
         public string Map_RotationZ = "RotationZ"; // SharpDX.DirectInput.JoystickOffset.RotationZ;
+        public bool   Invert_RotationZ = false;
 
         public uint Map_PointOfViewControllers0 = 0; // SharpDX.DirectInput.JoystickOffset.PointOfViewControllers0;
         public uint Map_PointOfViewControllers1 = 1; // SharpDX.DirectInput.JoystickOffset.PointOfViewControllers1;

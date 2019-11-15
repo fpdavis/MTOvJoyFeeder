@@ -85,8 +85,9 @@
     </Reference>
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml" />
-    <Reference Include="vGenInterfaceWrap">
-      <HintPath>..\..\vGenInterface SDK\x64\vGenInterfaceWrap.dll</HintPath>
+    <Reference Include="vGenInterfaceWrap, Version=1.0.0.6, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Assets\vGenInterfaceWrap.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -123,11 +124,6 @@
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="vXboxInterface.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
@@ -137,7 +133,7 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>copy $(SolutionDir)..\SDK\c#\x64\vJoyInterface.dll  $(TargetDir)
+    <PostBuildEvent>copy $(SolutionDir)Assets $(TargetDir)
 </PostBuildEvent>
   </PropertyGroup>
 </Project>

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace MTOvJoyFeeder
 {
@@ -49,7 +50,7 @@ namespace MTOvJoyFeeder
 
         private static void WriteConfigFile(List<JoystickConfig> oJoystickConfig)
         {
-            File.WriteAllText(Program.goOptions.ConfigFile, JsonConvert.SerializeObject(oJoystickConfig, Formatting.Indented));
+            File.WriteAllText(Program.goOptions.ConfigFile, Regex.Replace(JsonConvert.SerializeObject(oJoystickConfig, Formatting.Indented), @"(\s+(\d))|((?<=\d)\s+([\]]))", "$2$4", RegexOptions.Multiline));            
         }
 
     }

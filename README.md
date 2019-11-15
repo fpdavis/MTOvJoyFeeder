@@ -32,9 +32,7 @@ In the above scenario left movement might appear erratic as the two joysticks ch
 
 ### Todo (in order of importance):
 
-* NormalizeRange() is untested
-* Dynamically set size of oNewJoystickInfo.Map_Buttons array
-* Add batch file to build to copy out files dll dependancies
+* Move some properties from JoystickInfo to JoystickConfig, currently there are some repeated elements that just get copied from JoystickConfig to JoystickInfo
 * Improved documentation/installation instructions
 * Determine current support for Force Feedback in vJoy/vXbox/SharpDX
 * Test with all available joysticks
@@ -86,3 +84,8 @@ In the above scenario left movement might appear erratic as the two joysticks ch
 
 * Added inversion option to physical joysticks an support in NormalizeRange(), normally the Y Axis will be inverted for XBox controllers
 * Added Ranges For X, Y, Z, RX, RY for controllers and virtual controllers for use by NormalizeRange() 
+
+* Tested NormalizeRange()
+* Added formatting to JSON output to remove extra newlines and spaces before integers in arrays
+* Fixed issue with not dynamically setting size of oNewJoystickInfo.Map_Buttons array by using JoystickConfig.Map_Buttons instead
+* Added an Assets folder to hold references and copy out required files from
