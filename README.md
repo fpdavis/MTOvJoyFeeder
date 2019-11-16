@@ -1,7 +1,5 @@
 # MTOvJoyFeeder
-Many To One (technically many to many) Virtual Joystick Feeder. Maps one or more physical joysticks to one virtual joystick.
-
-This project is based on https://github.com/shauleiz/vJoy and requires vJoy to be installed and working.
+Many To One (technically many to many) Virtual Joystick Feeder. Maps one or more physical joysticks to one (or more) virtual joystick.
 
 A few scenarios where this might be useful:
 
@@ -10,6 +8,25 @@ A few scenarios where this might be useful:
 * An application doesn't recognize a controller but will recognize a vJoy controller. In this case the virtual controller is just being used as a pass through for the physical controller.
 * Multiple players for a single player game where several people have their own controller and can either take turns controlling the game or have specific tasks (input controls) they are responsible for.
 * Heads up/on on one games can be converted to multi player team games. An example would be with a fighting game such as Street Fighter II, each character could be mapped to a virtual joystick being feed by a team of one or more players. The players would then need to coorindate their movement to control the character.
+
+## Requirements
+
+This application runs on Windows and is based on vJoy by Shauleiz and ScpVbus by Benjamin Höglinger (@nefarius). It requires one or both of these to be installed and working (depending on what type of controller you want to emulate). vJoy does not emulate Xbox devices, if you need a virtual Xbox device (vXbox) use ScpVbus.
+
+### vJoy
+
+* https://github.com/jshafer817/vJoy/releases (jshafer817 released this on Jul 14, 2019)
+* https://github.com/shauleiz/vJoy/releases (Shauleiz released this on May 27, 2018)
+* http://vjoystick.sourceforge.net/site/index.php/download-a-install/download (Older versions)
+
+### ScpVbus
+
+* http://vjoystick.sourceforge.net/site/index.php/vxbox (download with instructions)
+* https://github.com/nefarius/ScpVBus
+
+### MTOvJoyFeeder
+
+* https://github.com/fpdavis/MTOvJoyFeeder/releases
 
 ### How it works
 
@@ -30,8 +47,29 @@ In the above scenario Joystick2 usurped the button press of Joystick1.
 
 In the above scenario left movement might appear erratic as the two joysticks change their positions.
 
+### Installation
+
+You first need to install either vJoy or ScpVbus. ScpVbus emulated controllers are supported by mroe modern Windows programs than vJoy. It emulates a traditional xBox controller. Next download and install MTOvJoyFeeder.
+I recommend running the console application from the command line. Click on the Windows Key, type CMD and hit enter, then change directories (cd) to where you installed MTOvJoyFeeder.
+Entering MTOvJoyFeeder and hitting enter will run the application. Hitting Ctrl-c will exit the application.
+When you run MTOvJoyFeeder for the first time it will scan for all of your connected controllers and automatially generate a file called MTOvJoyFeeder.json in the installed directory. 
+This file will be created anytime it does not exist. You can specify the name and location of this file in the MTOvJoyFeeder.exe.config file or on the command line when the application is run 
+(enter MTOvJoyFeeder.exe --help for help with command line options).
+
+The automatically generated MTOvJoyFeeder.json file will map every physical controller to the first virtual vJoy controller and the first virtual vXbox controller, regardless if they exist. You will need
+to modify the MTOvJoyFeeder.json in your favorite text editor and change the numbers between the brackets for Map_To_vJoyDevice_Ids and Map_To_xBox_Ids to the ids of the virtual controllers you want the physical 
+controller mapped to. You can delete any controllers from the file that you do not want to map or simply delete the numbers between the brackets to exclude mapping the physical controller to either a vJoy
+or vXbox device. Multiple Ids may be added seperated by commas to map a single physical device to multiple virtual devices.
+
+Example:
+
+    "Map_To_vJoyDevice_Ids": [ 2, 3 ],
+    "Map_To_xBox_Ids": [ 4 ],
+
 ### Todo (in order of importance):
 
+* Add Help details to command line
+* Add cleaner way to exit console application
 * Move some properties from JoystickInfo to JoystickConfig, currently there are some repeated elements that just get copied from JoystickConfig to JoystickInfo
 * Improved documentation/installation instructions
 * Determine current support for Force Feedback in vJoy/vXbox/SharpDX
@@ -43,6 +81,7 @@ In the above scenario left movement might appear erratic as the two joysticks ch
 * Investigate implementing oJoystickInfo.oJoystick.SetNotification()
 * Clean up some calls to WriteToEventLog that are using String.Format
 * Wire up Guide button when SharpDX supports it - https://github.com/sharpdx/SharpDX/issues/1074
+* Support ViGEm Bus Driver - https://github.com/ViGEm/ViGEmBus
 
 ### Changes (oldest to newest):
 
@@ -89,3 +128,7 @@ In the above scenario left movement might appear erratic as the two joysticks ch
 * Added formatting to JSON output to remove extra newlines and spaces before integers in arrays
 * Fixed issue with not dynamically setting size of oNewJoystickInfo.Map_Buttons array by using JoystickConfig.Map_Buttons instead
 * Added an Assets folder to hold references and copy out required files from
+
+* Made vXbox Y and RY inverted by default so directions match with vJoy
+* Added to this documentation
+* Fixed CommandLineParser's (https://github.com/commandlineparser) help display as it wasn't working due to the placement of a private variable between the [Option] and the public property definition.

@@ -30,17 +30,17 @@ namespace MTOvJoyFeeder
 
     }
 
-        public class Options
+    class Options
     {
-        [Option('v', "Verbosity", HelpText =
-              "The amount of verbosity to use. [-v 3]. "
-            + "Debug (5): Super detail. "
-            + "Verbose (4): Almost everything. "
-            + "Information (3): Generally useful information. "
-            + "Warning (2): Expected problems. "
-            + "Error (1): Errors that are recoverable. "
-            + "Critical (0): Errors that stop execution. ")]
         private Nullable<uint> _Verbosity { get; set; }
+        [Option('v', "Verbosity", HelpText =
+              "The amount of verbosity to use. [-v 3]<br/><br/>"
+            + "      Debug (5): Super detail.<br/>"
+            + "    Verbose (4): Almost everything.<br/>"
+            + "Information (3): Generally useful information.<br/>"
+            + "    Warning (2): Expected problems.<br/>"
+            + "      Error (1): Errors that are recoverable.<br/>"
+            + "   Critical (0): Errors that stop execution.<br/>")]
         public uint Verbosity
         {
             get
@@ -48,14 +48,14 @@ namespace MTOvJoyFeeder
                 if (_Verbosity.HasValue) return (uint)_Verbosity;
 
                 _Verbosity = uint.TryParse(ConfigurationManager.AppSettings["Verbosity"], out uint iReturn) ? iReturn : 3;
-                
+
                 return (uint)_Verbosity;
             }
             set { _Verbosity = value; }
         }
 
-        [Option('c', "config", Required = false, HelpText = "Override location of the config file. Full or relative path must be provided. [-c c:\\configs\\MTOvJoyFeeder.json]")]
         private string _ConfigFile { get; set; }
+        [Option('c', "config", Required = false, HelpText = "Override location of the config file.<br/>Full or relative path must be provided.<br/>[-c c:\\configs\\MTOvJoyFeeder.json]")]
         public string ConfigFile
         {
             get
@@ -82,8 +82,8 @@ namespace MTOvJoyFeeder
             set { _ConfigFile = value; }
         }
 
-        [Option('m', "MaxErrors", Required = false, HelpText = "Maximum number of errors before removing a Joystick from monitoring. [-m 500]")]
         private Nullable<uint> _ErrorsBeforeJoystickRemoval { get; set; }
+        [Option('m', "MaxErrors", Required = false, HelpText = "Maximum number of errors before removing a Joystick from monitoring. [-m 500]")]
         public uint ErrorsBeforeJoystickRemoval
         {
             get
@@ -97,8 +97,8 @@ namespace MTOvJoyFeeder
             set { _ErrorsBeforeJoystickRemoval = value; }
         }
 
-        [Option('s', "silent", Required = false, HelpText = "If set to true, no messages will be sent to the console. [-s true]")]
         private Nullable<Boolean> _Silent { get; set; }
+        [Option('s', "silent", Required = false, HelpText = "If set to true, no messages will be sent to the console. [-s true]")]
         public Boolean Silent
         {
             get
@@ -106,29 +106,29 @@ namespace MTOvJoyFeeder
                 if (_Silent.HasValue) return (Boolean)_Silent;
 
                 _Silent = Boolean.TryParse(ConfigurationManager.AppSettings["Silent"], out Boolean bReturn) ? bReturn : false;
-                
+
                 return (Boolean)_Silent;
             }
             set { _Silent = value; }
         }
 
-        [Option('e', "EnableEventLogging", Required = false, HelpText = "If set to true messages will be sent to the event log. Requires Admin privalages for the first run to generate the initial log. [-e true]")]
         private Nullable<Boolean> _EnableEventLogging { get; set; }
+        [Option('e', "EnableEventLogging", Required = false, HelpText = "If set to true messages will be sent to the event log.<br/>Requires Admin privalages for the first run to generate the initial log. [-e true]")]
         public Boolean EnableEventLogging
         {
             get
             {
                 if (_EnableEventLogging.HasValue) return (Boolean)_EnableEventLogging;
 
-                _EnableEventLogging = Boolean.TryParse(ConfigurationManager.AppSettings["EnableEventLogging"], out Boolean bReturn) ? bReturn : false;               
+                _EnableEventLogging = Boolean.TryParse(ConfigurationManager.AppSettings["EnableEventLogging"], out Boolean bReturn) ? bReturn : false;
 
                 return (Boolean)_EnableEventLogging;
             }
             set { _EnableEventLogging = value; }
         }
 
-        [Option('f', "EnableUnPlugForce", Required = false, HelpText = "On exit unplugs ALL virtual controllers controlled by any application, default is false. [-f true]")]
         private Nullable<Boolean> _EnableUnPlugForce { get; set; }
+        [Option('f', "EnableUnPlugForce", Required = false, HelpText = "On exit unplugs ALL virtual controllers controlled<br/>by any application, default is false. [-f true]")]
         public Boolean EnableUnPlugForce
         {
             get
@@ -142,8 +142,8 @@ namespace MTOvJoyFeeder
             set { _EnableUnPlugForce = value; }
         }
 
-        [Option('t', "SleepTime", Required = false, HelpText = "Milliseconds to sleep between buffer checks. [-t 50]")]
         private Nullable<int> _SleepTime { get; set; }
+        [Option('t', "SleepTime", Required = false, HelpText = "Milliseconds to sleep between buffer checks. [-t 50]")]
         public int SleepTime
         {
             get
@@ -155,7 +155,7 @@ namespace MTOvJoyFeeder
                 return (int)_SleepTime;
             }
             set { _SleepTime = value; }
-        }
+        }        
     }
 
     public class vJoystickInfo
@@ -166,35 +166,47 @@ namespace MTOvJoyFeeder
 
         public vXboxInterfaceWrap.PXINPUT_VIBRATION pVib = new vXboxInterfaceWrap.PXINPUT_VIBRATION();
 
-        public long lMinXVal = int.MaxValue;
-        public long lMaxXVal = int.MaxValue;
-        public long lXRange  = int.MaxValue;
+        public double Percentage_Slack = .01;
+
+        public double PercentX;
+        public double PercentY;
+        public double PercentZ;
+        public double PercentRX;
+        public double PercentRY;
+        public double PercentRZ;
+
+        public long lMinXVal;
+        public long lMaxXVal;
+        public long lXRange;
         public long lMinPlusMaxX;
         
-        public long lMinYVal = int.MaxValue;
-        public long lMaxYVal = int.MaxValue;
-        public long lYRange  = int.MaxValue;
+        public long lMinYVal;
+        public long lMaxYVal;
+        public long lYRange;
         public long lMinPlusMaxY;
 
-        public long lMinZVal = int.MaxValue;
-        public long lMaxZVal = int.MaxValue;
-        public long lZRange  = int.MaxValue;
+        public long lMinZVal;
+        public long lMaxZVal;
+        public long lZRange;
         public long lMinPlusMaxZ;
 
-        public long lMinRXVal = int.MaxValue;
-        public long lMaxRXVal = int.MaxValue;
-        public long lRXRange  = int.MaxValue;
+        public long lMinRXVal;
+        public long lMaxRXVal;
+        public long lRXRange;
         public long lMinPlusMaxRX;
 
-        public long lMinRYVal = int.MaxValue;
-        public long lMaxRYVal = int.MaxValue;
-        public long lRYRange  = int.MaxValue;
+        public long lMinRYVal;
+        public long lMaxRYVal;
+        public long lRYRange;
         public long lMinPlusMaxRY;
 
-        public long lMinRZVal = int.MaxValue;
-        public long lMaxRZVal = int.MaxValue;
-        public long lRZRange  = int.MaxValue;
+        public long lMinRZVal;
+        public long lMaxRZVal;
+        public long lRZRange;
         public long lMinPlusMaxRZ;
+
+        public long PreviousX, PreviousY, PreviousZ;
+        public long PreviousRX, PreviousRY, PreviousRZ;
     }
 
     public class JoystickInfo
@@ -209,47 +221,42 @@ namespace MTOvJoyFeeder
 
         public uint ErrorCount = 0;
 
-        public long lMinXVal = int.MinValue;
-        public long lMaxXVal = int.MaxValue;
+        public long lMinXVal;
+        public long lMaxXVal;
         public long lMinPlusMaxX;
         public long lXRange;
         
-        public long lMinYVal = int.MinValue;
-        public long lMaxYVal = int.MaxValue;
+        public long lMinYVal;
+        public long lMaxYVal;
         public long lMinPlusMaxY;
         public long lYRange;
 
-        public long lMinZVal = int.MinValue;
-        public long lMaxZVal = int.MaxValue;
+        public long lMinZVal;
+        public long lMaxZVal;
         public long lMinPlusMaxZY;
         public long lZRange;        
 
-        public long lMinRXVal = int.MinValue;
-        public long lMaxRXVal = int.MaxValue;
+        public long lMinRXVal;
+        public long lMaxRXVal;
         public long lMinPlusMaxRX;
         public long lRXRange;        
 
-        public long lMinRYVal = int.MinValue;
-        public long lMaxRYVal = int.MaxValue;
+        public long lMinRYVal;
+        public long lMaxRYVal;
         public long lMinPlusMaxRY;
         public long lRYRange;
 
-        public long lMinRZVal = int.MinValue;
-        public long lMaxRZVal = int.MaxValue;        
+        public long lMinRZVal;
+        public long lMaxRZVal;
         public long lMinPlusMaxRZ;
         public long lRZRange;
-
-        public long lPreviousX, lPreviousY, lPreviousZ;
-        public long PreviousRX, PreviousRY, PreviousRZ;
-
+        
         public double PercentX;
         public double PercentY;
         public double PercentZ;
         public double PercentRX;
         public double PercentRY;
         public double PercentRZ;
-
-        public double PercentageSlack = .01;
 
         public HID_USAGES Map_X = HID_USAGES.HID_USAGE_X;
         public HID_USAGES Map_Y = HID_USAGES.HID_USAGE_Y;
@@ -263,6 +270,9 @@ namespace MTOvJoyFeeder
         public uint Map_PointOfViewControllers1 = 1;
         public uint Map_PointOfViewControllers2 = 2;
         public uint Map_PointOfViewControllers3 = 3;
+
+        public long PreviousX, PreviousY, PreviousZ;
+        public long PreviousRX, PreviousRY, PreviousRZ;
     }
 
     public class JoystickConfig

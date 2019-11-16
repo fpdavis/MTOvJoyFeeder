@@ -11,21 +11,18 @@ using vGenInterfaceWrap;
 using vXboxInterfaceWrap;
 using System.Linq;
 using System.Runtime.InteropServices;
+using CommandLine.Text;
 
 namespace MTOvJoyFeeder
 {
     class Program
     {
-        //private static StringBuilder sbgMessageLog = new StringBuilder();
-
-        //static public vJoy.JoystickState iReport;
-
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool SetConsoleCtrlHandler(EventHandler handler, bool add);
 
         static public vGen oVirtualJoystick;
         static public Options goOptions;
-        
+
         private delegate bool EventHandler(CtrlType oCtrlType);
         static EventHandler oEventHandler;       
         enum CtrlType
@@ -39,16 +36,30 @@ namespace MTOvJoyFeeder
 
         static void Main(string[] args)
         {
-            Parser.Default.ParseArguments<Options>(args)
-                .WithParsed(x => { Run(x); })
-                .WithNotParsed((errs) => { return; });
-
+            var oParser = new CommandLine.Parser(with => with.HelpWriter = null);
+            var oPparserResult = oParser.ParseArguments<Options>(args);
+            oPparserResult
+             .WithParsed<Options>(options => Run(options))
+             .WithNotParsed(errs => DisplayHelp(oPparserResult, errs));
         } // Main
+        
+        static void DisplayHelp<T>(ParserResult<T> oHelpResult, IEnumerable<Error> oErrors)
+        {
+            string sHelpText = HelpText.AutoBuild(oHelpResult, oOptions =>
+            {
+                oOptions.AdditionalNewLineAfterOption = false; //remove the extra newline between options
+                oOptions.MaximumDisplayWidth = 50000;
+                return HelpText.DefaultParsingErrorsHandler(oHelpResult, oOptions);
+            }, e => e);
+
+            // I do not like the default formating that CommandLine Parser provides.
+            Console.WriteLine(sHelpText.Replace("<br/>", "\n".PadRight(31)));
+        }
 
         static void Run(Options oOptions)
         {
             goOptions = oOptions;
-
+            
             oEventHandler += new EventHandler(OnExit);
             SetConsoleCtrlHandler(oEventHandler, true);
             
@@ -82,27 +93,30 @@ namespace MTOvJoyFeeder
             {
                 ReleasevXboxJoysticks();
             }
+
+            WriteToEventLog("End of line");
+
         }
 
         static Boolean CreatevXboxJoysticks(List<vJoystickInfo> oAllVJoystickInfo, List<uint> oVirtualJoysticksToUse)
         {
             byte Led = 0xFF;
             Boolean bReturn = false;
-
+            
             if (vXboxInterface.isVBusExists())
             {
-                WriteToEventLog("vBus found...");
+                WriteToEventLog("\nxBox vBus interface found...");
             }
             else
             {
-                WriteToEventLog("vBus for xBox controller not enabled...");
+                WriteToEventLog("\nvBus interface for xBox controller not enabled...");
                 return false;
             }
 
             byte nSlots = 0xFF;
             vXboxInterface.GetNumEmptyBusSlots(ref nSlots);
 
-            WriteToEventLog($"{nSlots} Empty Controller slots found.");
+            WriteToEventLog($"{nSlots} Empty xBox Controller slots found.");
 
             // Check for avaiable devices
             foreach (uint iSlot in oVirtualJoysticksToUse)
@@ -110,7 +124,7 @@ namespace MTOvJoyFeeder
                 bool bSlotInUse = false;
 
                 bSlotInUse = vXboxInterface.isControllerExists(iSlot);
-                WriteToEventLog("Virtual Device (vXbox) " + iSlot + " " + (bSlotInUse ? "in use, forcing release." : "not in use."));
+                WriteToEventLog("\nVirtual Device (vXbox) " + iSlot + " " + (bSlotInUse ? "in use, forcing release." : "not in use."));
                 if (bSlotInUse && !vXboxInterface.isControllerOwned(iSlot))
                 {
                     vXboxInterface.UnPlugForce(iSlot);
@@ -122,12 +136,12 @@ namespace MTOvJoyFeeder
 
                 if (bSlotInUse != true)
                 {
-                    WriteToEventLog("\tFailed to Acquire Virtual Device " + iSlot.ToString());
+                    WriteToEventLog("\tFailed to acquire");
                 }
                 else
                 {
                     vXboxInterface.GetLedNumber(iSlot, ref Led);
-                    WriteToEventLog("\tAcquired Virtual Device " + iSlot.ToString() + ", LED number " + Led.ToString());
+                    WriteToEventLog("\tAcquired\n\tLED number " + Led.ToString());
 
                     vJoystickInfo oNewVJoystickInfo = new vJoystickInfo();
                     oNewVJoystickInfo.id = iSlot;
@@ -158,6 +172,14 @@ namespace MTOvJoyFeeder
                     oNewVJoystickInfo.lRYRange  = Range.MaxRYVal - Range.MinRYVal;
                     oNewVJoystickInfo.lMinPlusMaxRY = Range.MaxRYVal + Range.MinRYVal;
 
+
+                    oNewVJoystickInfo.PercentX = (oNewVJoystickInfo.lMaxXVal - oNewVJoystickInfo.lMinXVal) * oNewVJoystickInfo.Percentage_Slack;
+                    oNewVJoystickInfo.PercentY = (oNewVJoystickInfo.lMaxYVal - oNewVJoystickInfo.lMinYVal) * oNewVJoystickInfo.Percentage_Slack;
+                    oNewVJoystickInfo.PercentZ = (oNewVJoystickInfo.lMaxZVal - oNewVJoystickInfo.lMinZVal) * oNewVJoystickInfo.Percentage_Slack;
+                    oNewVJoystickInfo.PercentRX = (oNewVJoystickInfo.lMaxRXVal - oNewVJoystickInfo.lMinRXVal) * oNewVJoystickInfo.Percentage_Slack;
+                    oNewVJoystickInfo.PercentRY = (oNewVJoystickInfo.lMaxRYVal - oNewVJoystickInfo.lMinRYVal) * oNewVJoystickInfo.Percentage_Slack;
+                    oNewVJoystickInfo.PercentRZ = (oNewVJoystickInfo.lMaxRZVal - oNewVJoystickInfo.lMinRZVal) * oNewVJoystickInfo.Percentage_Slack;
+
                     oAllVJoystickInfo.Add(oNewVJoystickInfo);
 
                     bReturn = true;
@@ -181,6 +203,8 @@ namespace MTOvJoyFeeder
                     WriteToEventLog(String.Format("\tVirtual Device {0}: {1}", iLoop, vXboxInterface.UnPlug(iLoop) ? "Successful" : "Unsuccessful"));
                 }
             }
+
+            WriteToEventLog(Environment.NewLine + "Controllers Released");
         }
 
         static void DetectVirtualJoysticks(List<vJoystickInfo> oAllVJoystickInfo, List<uint> oVirtualJoysticksToUse)
@@ -218,37 +242,39 @@ namespace MTOvJoyFeeder
                 switch (status)
                 {
                     case VjdStat.VJD_STAT_OWN:
-                        WriteToEventLog($"vJoy Device {id} is already owned by this feeder");
+                        WriteToEventLog($"Virtual Device (vJoy) {id} is already owned by this feeder.");
                         break;
                     case VjdStat.VJD_STAT_FREE:
-                        WriteToEventLog($"vJoy Device {id} is free");
+                        WriteToEventLog($"Virtual Device (vJoy) Device {id} is free.");
+                        oVirtualJoystick.AcquireVJD(id);
+                        status = oVirtualJoystick.GetVJDStatus(id);
                         break;
                     case VjdStat.VJD_STAT_BUSY:
-                        WriteToEventLog($"vJoy Device {id} is already owned by another feeder\nCannot continue");
-                        return;
+                        WriteToEventLog($"Virtual Device (vJoy) {id} is already owned by another feeder.");
+                        break;
                     case VjdStat.VJD_STAT_MISS:
-                        WriteToEventLog($"vJoy Device {id} is not installed or disabled\nCannot continue");
-                        return;
+                        WriteToEventLog($"Virtual Device (vJoy) {id} is not installed or disabled.");
+                        break;
                     default:
-                        WriteToEventLog($"vJoy Device {id} general error\nCannot continue");
-                        return;
+                        WriteToEventLog($"Virtual Device (vJoy) {id} general error.");
+                        break;
                 };
 
-                // Acquire the target
-                if ((status == VjdStat.VJD_STAT_OWN) || ((status == VjdStat.VJD_STAT_FREE) && (!oVirtualJoystick.AcquireVJD(id))))
+                if (status != VjdStat.VJD_STAT_OWN)
                 {
-                    WriteToEventLog($"Failed to acquire vJoy device number {id}.");
-                    return;
+                    WriteToEventLog($"\tFailed to acquire");
+                    continue;
                 }
                 else
-                    WriteToEventLog($"Acquired: vJoy device number {id}.");
+                {
+                    WriteToEventLog($"\tAcquired");
+                }
 
                 if (oVirtualJoystick.IsDeviceFfb(id))
                 {
                     object oFFData = null;
                     oVirtualJoystick.FfbRegisterGenCB(vJoyFfbCbFunc_CallBack, oFFData);
                 }
-
 
                 // Check which axes are supported
                 bool AxisX = oVirtualJoystick.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_X);
@@ -283,26 +309,41 @@ namespace MTOvJoyFeeder
                 oNewVJoystickInfo.lZRange  = oNewVJoystickInfo.lMaxZVal  - oNewVJoystickInfo.lMinZVal;
                 oNewVJoystickInfo.lRXRange = oNewVJoystickInfo.lMaxRXVal - oNewVJoystickInfo.lMinRXVal;
                 oNewVJoystickInfo.lRYRange = oNewVJoystickInfo.lMaxRYVal - oNewVJoystickInfo.lMinRYVal;
+                oNewVJoystickInfo.lRZRange = oNewVJoystickInfo.lMaxRZVal - oNewVJoystickInfo.lMinRZVal;
 
+                oNewVJoystickInfo.lMinPlusMaxX  = oNewVJoystickInfo.lMaxXVal + oNewVJoystickInfo.lMinXVal;
+                oNewVJoystickInfo.lMinPlusMaxY  = oNewVJoystickInfo.lMaxYVal + oNewVJoystickInfo.lMinYVal;
+                oNewVJoystickInfo.lMinPlusMaxZ  = oNewVJoystickInfo.lMaxZVal + oNewVJoystickInfo.lMinZVal;
+                oNewVJoystickInfo.lMinPlusMaxRX = oNewVJoystickInfo.lMaxRXVal + oNewVJoystickInfo.lMinRXVal;
+                oNewVJoystickInfo.lMinPlusMaxRY = oNewVJoystickInfo.lMaxRYVal + oNewVJoystickInfo.lMinRYVal;
+                oNewVJoystickInfo.lMinPlusMaxRZ = oNewVJoystickInfo.lMaxRZVal + oNewVJoystickInfo.lMinRZVal;
+
+                oNewVJoystickInfo.PercentX = (oNewVJoystickInfo.lMaxXVal - oNewVJoystickInfo.lMinXVal) * oNewVJoystickInfo.Percentage_Slack;
+                oNewVJoystickInfo.PercentY = (oNewVJoystickInfo.lMaxYVal - oNewVJoystickInfo.lMinYVal) * oNewVJoystickInfo.Percentage_Slack;
+                oNewVJoystickInfo.PercentZ = (oNewVJoystickInfo.lMaxZVal - oNewVJoystickInfo.lMinZVal) * oNewVJoystickInfo.Percentage_Slack;
+                oNewVJoystickInfo.PercentRX = (oNewVJoystickInfo.lMaxRXVal - oNewVJoystickInfo.lMinRXVal) * oNewVJoystickInfo.Percentage_Slack;
+                oNewVJoystickInfo.PercentRY = (oNewVJoystickInfo.lMaxRYVal - oNewVJoystickInfo.lMinRYVal) * oNewVJoystickInfo.Percentage_Slack;
+                oNewVJoystickInfo.PercentRZ = (oNewVJoystickInfo.lMaxRZVal - oNewVJoystickInfo.lMinRZVal) * oNewVJoystickInfo.Percentage_Slack;
+                
                 // Print results
-                WriteToEventLog($"\nvJoy Device {id} capabilities:\n");
-                WriteToEventLog($"\tNumber of buttons:\t\t{nButtons}");
-                WriteToEventLog($"\tNumber of Continuous POVs:\t{ContPovNumber}");
-                WriteToEventLog($"\tNumber of Descrete POVs:\t{DiscPovNumber}");
+                WriteToEventLog($"\tCapabilities:");
+                WriteToEventLog($"\t\tNumber of buttons:\t\t{nButtons}");
+                WriteToEventLog($"\t\tNumber of Continuous POVs:\t{ContPovNumber}");
+                WriteToEventLog($"\t\tNumber of Descrete POVs:\t{DiscPovNumber}");
 
-                WriteToEventLog(String.Format("\tAxis X:\t\t\t\t{0}", AxisX ? "Yes" : "No"));
-                WriteToEventLog(String.Format("\tX Axis Range:\t\t\t{0}, {1}", oNewVJoystickInfo.lMinXVal, oNewVJoystickInfo.lMaxXVal));
-                WriteToEventLog(String.Format("\tAxis Y:\t\t\t\t{0}", AxisX ? "Yes" : "No"));
-                WriteToEventLog(String.Format("\tY Axis Range:\t\t\t{0}, {1}", oNewVJoystickInfo.lMinYVal, oNewVJoystickInfo.lMaxYVal));
-                WriteToEventLog(String.Format("\tAxis Z:\t\t\t\t{0}", AxisX ? "Yes" : "No"));
-                WriteToEventLog(String.Format("\tZ Axis Range:\t\t\t{0}, {1}", oNewVJoystickInfo.lMinZVal, oNewVJoystickInfo.lMaxZVal));
+                WriteToEventLog(String.Format("\t\tAxis X:\t\t\t\t{0}", AxisX ? "Yes" : "No"));
+                WriteToEventLog(String.Format("\t\tX Axis Range:\t\t\t{0}, {1}", oNewVJoystickInfo.lMinXVal, oNewVJoystickInfo.lMaxXVal));
+                WriteToEventLog(String.Format("\t\tAxis Y:\t\t\t\t{0}", AxisX ? "Yes" : "No"));
+                WriteToEventLog(String.Format("\t\tY Axis Range:\t\t\t{0}, {1}", oNewVJoystickInfo.lMinYVal, oNewVJoystickInfo.lMaxYVal));
+                WriteToEventLog(String.Format("\t\tAxis Z:\t\t\t\t{0}", AxisX ? "Yes" : "No"));
+                WriteToEventLog(String.Format("\t\tZ Axis Range:\t\t\t{0}, {1}", oNewVJoystickInfo.lMinZVal, oNewVJoystickInfo.lMaxZVal));
 
-                WriteToEventLog(String.Format("\tAxis Rx:\t\t\t{0}", AxisRX ? "Yes" : "No"));
-                WriteToEventLog(String.Format("\tRx Axis Range:\t\t\t{0}, {1}", oNewVJoystickInfo.lMinRXVal, oNewVJoystickInfo.lMaxRXVal));
-                WriteToEventLog(String.Format("\tAxis Ry:\t\t\t{0}", AxisRY ? "Yes" : "No"));
-                WriteToEventLog(String.Format("\tRy Axis Range:\t\t\t{0}, {1}", oNewVJoystickInfo.lMinRYVal, oNewVJoystickInfo.lMaxRYVal));
-                WriteToEventLog(String.Format("\tAxis Rz:\t\t\t{0}", AxisRZ ? "Yes" : "No"));
-                WriteToEventLog(String.Format("\tRz Axis Range:\t\t\t{0}, {1}", oNewVJoystickInfo.lMinRZVal, oNewVJoystickInfo.lMaxRZVal));
+                WriteToEventLog(String.Format("\t\tAxis Rx:\t\t\t{0}", AxisRX ? "Yes" : "No"));
+                WriteToEventLog(String.Format("\t\tRx Axis Range:\t\t\t{0}, {1}", oNewVJoystickInfo.lMinRXVal, oNewVJoystickInfo.lMaxRXVal));
+                WriteToEventLog(String.Format("\t\tAxis Ry:\t\t\t{0}", AxisRY ? "Yes" : "No"));
+                WriteToEventLog(String.Format("\t\tRy Axis Range:\t\t\t{0}, {1}", oNewVJoystickInfo.lMinRYVal, oNewVJoystickInfo.lMaxRYVal));
+                WriteToEventLog(String.Format("\t\tAxis Rz:\t\t\t{0}", AxisRZ ? "Yes" : "No"));
+                WriteToEventLog(String.Format("\t\tRz Axis Range:\t\t\t{0}, {1}", oNewVJoystickInfo.lMinRZVal, oNewVJoystickInfo.lMaxRZVal));
 
                 WriteToEventLog();
 
@@ -320,7 +361,9 @@ namespace MTOvJoyFeeder
             var oGetDevices = directInput.GetDevices(DeviceClass.GameControl, DeviceEnumerationFlags.AttachedOnly);
             foreach (var oDeviceInstance in oGetDevices)
             {
-                if (oDeviceInstance.InstanceName.Trim() != "vJoy Device")
+                oDeviceInstance.InstanceName = oDeviceInstance.InstanceName.Trim();
+
+                if (oDeviceInstance.InstanceName != "vJoy Device")
                 {
                     if (oJoystickConfig == null
                         || (oJoystickConfig.Find(x => x.Instance_GUID == oDeviceInstance.InstanceGuid && x.Enabled) != null)
@@ -353,8 +396,8 @@ namespace MTOvJoyFeeder
                     oThisJoystickConfig = new JoystickConfig();
                 }
 
-                WriteToEventLog(String.Format("\nFound {0}", oDeviceInstance.InstanceName.Trim()));
-                WriteToEventLog(String.Format("\tInstance_Name:\t\t\t{0}", oDeviceInstance.InstanceName.Trim()));
+                WriteToEventLog(String.Format("\nFound {0}", oDeviceInstance.InstanceName));
+                WriteToEventLog(String.Format("\tInstance_Name:\t\t\t{0}", oDeviceInstance.InstanceName));
                 WriteToEventLog(String.Format("\tInstance_Type:\t\t\t{0}", oDeviceInstance.Type));
                 WriteToEventLog(String.Format("\tInstance_GUID:\t\t\t{0}", oDeviceInstance.InstanceGuid));
                 WriteToEventLog(String.Format("\tProduct_GUID:\t\t\t{0}", oDeviceInstance.ProductGuid));
@@ -379,8 +422,7 @@ namespace MTOvJoyFeeder
 
                 oNewJoystickInfo.oJoystickConfig = oThisJoystickConfig;
                 oNewJoystickInfo.Map_To_vJoyDevice_Ids = oThisJoystickConfig.Map_To_vJoyDevice_Ids;
-                oNewJoystickInfo.Map_To_xBox_Ids = oThisJoystickConfig.Map_To_xBox_Ids;
-                oNewJoystickInfo.PercentageSlack = oThisJoystickConfig.Percentage_Slack;
+                oNewJoystickInfo.Map_To_xBox_Ids = oThisJoystickConfig.Map_To_xBox_Ids;                
 
                 WriteToEventLog(String.Format("\tNumber of buttons:\t\t{0}", oNewJoystickInfo.oJoystick.Capabilities.ButtonCount));
                 WriteToEventLog(String.Format("\tNumber of POVs:\t\t\t{0}", oNewJoystickInfo.oJoystick.Capabilities.PovCount));
@@ -398,7 +440,7 @@ namespace MTOvJoyFeeder
                             oNewJoystickInfo.lMinXVal = oObjectProperties.Range.Minimum;
                             oNewJoystickInfo.lMaxXVal = oObjectProperties.Range.Maximum;
                             oNewJoystickInfo.lXRange  = oObjectProperties.Range.Maximum - oObjectProperties.Range.Minimum;
-                            oNewJoystickInfo.PercentX = (oNewJoystickInfo.lMaxXVal - oNewJoystickInfo.lMinXVal) * oNewJoystickInfo.PercentageSlack;
+                            oNewJoystickInfo.PercentX = (oNewJoystickInfo.lMaxXVal - oNewJoystickInfo.lMinXVal) * oThisJoystickConfig.Percentage_Slack;
                             oNewJoystickInfo.Map_X = StringToHID_USAGES(oThisJoystickConfig.Map_X);
 
                             WriteToEventLog(String.Format("\t{0}\tYes ({1}, {2})", oJoystickObject.Name, oObjectProperties.Range.Minimum, oObjectProperties.Range.Maximum));
@@ -407,7 +449,7 @@ namespace MTOvJoyFeeder
                             oNewJoystickInfo.lMinYVal = oObjectProperties.Range.Minimum;
                             oNewJoystickInfo.lMaxYVal = oObjectProperties.Range.Maximum;
                             oNewJoystickInfo.lYRange  = oObjectProperties.Range.Maximum - oObjectProperties.Range.Minimum;
-                            oNewJoystickInfo.PercentY = (oNewJoystickInfo.lMaxYVal - oNewJoystickInfo.lMinYVal) * oNewJoystickInfo.PercentageSlack;
+                            oNewJoystickInfo.PercentY = (oNewJoystickInfo.lMaxYVal - oNewJoystickInfo.lMinYVal) * oThisJoystickConfig.Percentage_Slack;
                             oNewJoystickInfo.Map_Y = StringToHID_USAGES(oThisJoystickConfig.Map_Y);
 
                             WriteToEventLog(String.Format("\t{0}\tYes ({1}, {2})", oJoystickObject.Name, oObjectProperties.Range.Minimum, oObjectProperties.Range.Maximum));
@@ -416,7 +458,7 @@ namespace MTOvJoyFeeder
                             oNewJoystickInfo.lMinZVal = oObjectProperties.Range.Minimum;
                             oNewJoystickInfo.lMaxZVal = oObjectProperties.Range.Maximum;
                             oNewJoystickInfo.lZRange = oObjectProperties.Range.Maximum - oObjectProperties.Range.Minimum;
-                            oNewJoystickInfo.PercentZ = (oNewJoystickInfo.lMaxZVal - oNewJoystickInfo.lMinZVal) * oNewJoystickInfo.PercentageSlack;
+                            oNewJoystickInfo.PercentZ = (oNewJoystickInfo.lMaxZVal - oNewJoystickInfo.lMinZVal) * oThisJoystickConfig.Percentage_Slack;
                             oNewJoystickInfo.Map_Z = StringToHID_USAGES(oThisJoystickConfig.Map_Z);
 
                             WriteToEventLog(String.Format("\t{0}\tYes ({1}, {2})", oJoystickObject.Name, oObjectProperties.Range.Minimum, oObjectProperties.Range.Maximum));
@@ -426,7 +468,7 @@ namespace MTOvJoyFeeder
                             oNewJoystickInfo.lMinRXVal = oObjectProperties.Range.Minimum;
                             oNewJoystickInfo.lMaxRXVal = oObjectProperties.Range.Maximum;
                             oNewJoystickInfo.lRXRange = oObjectProperties.Range.Maximum - oObjectProperties.Range.Minimum;
-                            oNewJoystickInfo.PercentRX = (oNewJoystickInfo.lMaxRXVal - oNewJoystickInfo.lMinRXVal) * oNewJoystickInfo.PercentageSlack;
+                            oNewJoystickInfo.PercentRX = (oNewJoystickInfo.lMaxRXVal - oNewJoystickInfo.lMinRXVal) * oThisJoystickConfig.Percentage_Slack;
                             oNewJoystickInfo.Map_RotationX = StringToHID_USAGES(oThisJoystickConfig.Map_RotationX);
 
                             WriteToEventLog(String.Format("\t{0}\tYes ({1}, {2})", oJoystickObject.Name, oObjectProperties.Range.Minimum, oObjectProperties.Range.Maximum));
@@ -435,7 +477,7 @@ namespace MTOvJoyFeeder
                             oNewJoystickInfo.lMinRYVal = oObjectProperties.Range.Minimum;
                             oNewJoystickInfo.lMaxRYVal = oObjectProperties.Range.Maximum;
                             oNewJoystickInfo.lRYRange = oObjectProperties.Range.Maximum - oObjectProperties.Range.Minimum;
-                            oNewJoystickInfo.PercentRY = (oNewJoystickInfo.lMaxRYVal - oNewJoystickInfo.lMinRYVal) * oNewJoystickInfo.PercentageSlack;
+                            oNewJoystickInfo.PercentRY = (oNewJoystickInfo.lMaxRYVal - oNewJoystickInfo.lMinRYVal) * oThisJoystickConfig.Percentage_Slack;
                             oNewJoystickInfo.Map_RotationY = StringToHID_USAGES(oThisJoystickConfig.Map_RotationY);
 
                             WriteToEventLog(String.Format("\t{0}\tYes ({1}, {2})", oJoystickObject.Name, oObjectProperties.Range.Minimum, oObjectProperties.Range.Maximum));
@@ -445,7 +487,7 @@ namespace MTOvJoyFeeder
                             oNewJoystickInfo.lMinRZVal = oObjectProperties.Range.Minimum;
                             oNewJoystickInfo.lMaxRZVal = oObjectProperties.Range.Maximum;
                             oNewJoystickInfo.lRZRange = oObjectProperties.Range.Maximum - oObjectProperties.Range.Minimum;
-                            oNewJoystickInfo.PercentRZ = (oNewJoystickInfo.lMaxRZVal - oNewJoystickInfo.lMinRZVal) * oNewJoystickInfo.PercentageSlack;
+                            oNewJoystickInfo.PercentRZ = (oNewJoystickInfo.lMaxRZVal - oNewJoystickInfo.lMinRZVal) * oThisJoystickConfig.Percentage_Slack;
                             oNewJoystickInfo.Map_RotationZ = StringToHID_USAGES(oThisJoystickConfig.Map_RotationZ);
 
                             WriteToEventLog(String.Format("\t{0}\tYes ({1}, {2})", oJoystickObject.Name, oObjectProperties.Range.Minimum, oObjectProperties.Range.Maximum));
@@ -649,141 +691,204 @@ namespace MTOvJoyFeeder
 
         private static void SendCommand(uint iVJoystickId, JoystickInfo oJoystickInfo, vJoystickInfo oThisVJoystickInfo, JoystickUpdate oState)
         {
-            int iNormalizedValue;          
+            long lNormalizedValue;
 
             switch (oState.Offset)
             {
                 case SharpDX.DirectInput.JoystickOffset.X:
-                    if (Math.Abs(oJoystickInfo.lPreviousX - oState.Value) > oJoystickInfo.PercentX)
+                    lNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinXVal, oJoystickInfo.lXRange, oThisVJoystickInfo.lMinXVal, oThisVJoystickInfo.lXRange);
+                    if ((Math.Abs(oJoystickInfo.PreviousX - oState.Value) > oJoystickInfo.PercentX) || (Math.Abs(oThisVJoystickInfo.PreviousX - lNormalizedValue) > oThisVJoystickInfo.PercentX))
                     {
-                        oJoystickInfo.lPreviousX = oState.Value;
-                        iNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinXVal, oJoystickInfo.lXRange, oJoystickInfo.oJoystickConfig.Invert_X, oThisVJoystickInfo.lMinXVal, oThisVJoystickInfo.lMinPlusMaxX, oThisVJoystickInfo.lXRange);
+                        oJoystickInfo.PreviousX = oState.Value;
+                        oThisVJoystickInfo.PreviousX = lNormalizedValue;
+
+                        if (oJoystickInfo.oJoystickConfig.Invert_X)
+                        {
+                            lNormalizedValue = oThisVJoystickInfo.lMinPlusMaxX - lNormalizedValue;
+                        }
 
                         if (oThisVJoystickInfo.ControlerType == DevType.vJoy)
                         {
-                            oVirtualJoystick.SetAxis(iNormalizedValue, iVJoystickId, oJoystickInfo.Map_X);
+                            oVirtualJoystick.SetAxis((int)lNormalizedValue, iVJoystickId, oJoystickInfo.Map_X);
                         }
                         else
                         {
-                            vXboxInterface.SetAxis(iVJoystickId, (short)iNormalizedValue, oJoystickInfo.Map_X);
+                            vXboxInterface.SetAxis(iVJoystickId, (short)lNormalizedValue, oJoystickInfo.Map_X);
                         }
 
-                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName.Trim(), oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_X));
+                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_X, oThisVJoystickInfo.ControlerType));
 
 #if DEBUG
-                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, iNormalizedValue));
+                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, lNormalizedValue));
 #endif
                     }
                     break;
                 case SharpDX.DirectInput.JoystickOffset.Y:
-                    if (Math.Abs(oJoystickInfo.lPreviousY - oState.Value) > oJoystickInfo.PercentY)
+                    lNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinYVal, oJoystickInfo.lYRange, oThisVJoystickInfo.lMinYVal, oThisVJoystickInfo.lYRange);
+                    if ((Math.Abs(oJoystickInfo.PreviousY - oState.Value) > oJoystickInfo.PercentY) || (Math.Abs(oThisVJoystickInfo.PreviousY - lNormalizedValue) > oThisVJoystickInfo.PercentY))
                     {
-                        oJoystickInfo.lPreviousY = oState.Value;
-                        iNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinYVal, oJoystickInfo.lYRange, oJoystickInfo.oJoystickConfig.Invert_Y, oThisVJoystickInfo.lMinYVal, oThisVJoystickInfo.lMinPlusMaxY, oThisVJoystickInfo.lYRange);
+                        oJoystickInfo.PreviousY = oState.Value;
+                        oThisVJoystickInfo.PreviousY = lNormalizedValue;
 
                         if (oThisVJoystickInfo.ControlerType == DevType.vJoy)
                         {
-                            oVirtualJoystick.SetAxis(iNormalizedValue, iVJoystickId, oJoystickInfo.Map_Y);
+                            if (oJoystickInfo.oJoystickConfig.Invert_Y)
+                            {
+                                lNormalizedValue = oThisVJoystickInfo.lMinPlusMaxY - lNormalizedValue;
+                            }
+
+                            oVirtualJoystick.SetAxis((int)lNormalizedValue, iVJoystickId, oJoystickInfo.Map_Y);
                         }
                         else
                         {
-                            vXboxInterface.SetAxis(iVJoystickId, (short)iNormalizedValue, oJoystickInfo.Map_Y);
+                            if (!oJoystickInfo.oJoystickConfig.Invert_Y)
+                            {
+                                lNormalizedValue = oThisVJoystickInfo.lMinPlusMaxY - lNormalizedValue;
+                            }
+
+                            vXboxInterface.SetAxis(iVJoystickId, (short)lNormalizedValue, oJoystickInfo.Map_Y);
                         }
 
-                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName.Trim(), oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_Y));
+                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_Y, oThisVJoystickInfo.ControlerType));
 
 #if DEBUG
-                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, iNormalizedValue));
+                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, lNormalizedValue));
 #endif
                     }
                     break;
                 case SharpDX.DirectInput.JoystickOffset.Z:
-                    if (Math.Abs(oJoystickInfo.lPreviousZ - oState.Value) > oJoystickInfo.PercentZ)
+                    lNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinZVal, oJoystickInfo.lZRange, oThisVJoystickInfo.lMinZVal, oThisVJoystickInfo.lZRange);
+                    if ((Math.Abs(oJoystickInfo.PreviousZ - oState.Value) > oJoystickInfo.PercentZ) || (Math.Abs(oThisVJoystickInfo.PreviousZ - lNormalizedValue) > oThisVJoystickInfo.PercentZ))
                     {
-                        oJoystickInfo.lPreviousZ = oState.Value;
-                        iNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinZVal, oJoystickInfo.lZRange, oJoystickInfo.oJoystickConfig.Invert_Z, oThisVJoystickInfo.lMinZVal, oThisVJoystickInfo.lMinPlusMaxZ, oThisVJoystickInfo.lZRange);
+                        oJoystickInfo.PreviousZ = oState.Value;
+                        oThisVJoystickInfo.PreviousZ = lNormalizedValue;
 
                         if (oThisVJoystickInfo.ControlerType == DevType.vJoy)
                         {
-                            oVirtualJoystick.SetAxis(iNormalizedValue, iVJoystickId, oJoystickInfo.Map_Z);
+                            if (oJoystickInfo.oJoystickConfig.Invert_Z)
+                            {
+                                lNormalizedValue = oThisVJoystickInfo.lMinPlusMaxZ - lNormalizedValue;
+                            }
+
+                            oVirtualJoystick.SetAxis((int)lNormalizedValue, iVJoystickId, oJoystickInfo.Map_Z);
                         }
                         else
                         {
-                            vXboxInterface.SetZAxis(iVJoystickId, (short)iNormalizedValue);
+                            if (!oJoystickInfo.oJoystickConfig.Invert_Z)
+                            {
+                                lNormalizedValue = oThisVJoystickInfo.lMinPlusMaxZ - lNormalizedValue;
+                            }
+
+                            vXboxInterface.SetZAxis(iVJoystickId, (short)lNormalizedValue);
                         }
 
-                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName.Trim(), oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_Z));
+                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_Z, oThisVJoystickInfo.ControlerType));
 
 #if DEBUG
-                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, iNormalizedValue));
+                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, lNormalizedValue));
 #endif
                     }
                     break;
 
                 case SharpDX.DirectInput.JoystickOffset.RotationX:
-                    if (Math.Abs(oJoystickInfo.PreviousRX - oState.Value) > oJoystickInfo.PercentRX)
+                    lNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinRXVal, oJoystickInfo.lRXRange, oThisVJoystickInfo.lMinRXVal, oThisVJoystickInfo.lRXRange);
+                    if ((Math.Abs(oJoystickInfo.PreviousRX - oState.Value) > oJoystickInfo.PercentRX) || (Math.Abs(oThisVJoystickInfo.PreviousRX - lNormalizedValue) > oThisVJoystickInfo.PercentRX))
                     {
                         oJoystickInfo.PreviousRX = oState.Value;
-                        iNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinRXVal, oJoystickInfo.lRXRange, oJoystickInfo.oJoystickConfig.Invert_RotationX, oThisVJoystickInfo.lMinRXVal, oThisVJoystickInfo.lMinPlusMaxRX, oThisVJoystickInfo.lRXRange);
+                        oThisVJoystickInfo.PreviousRX = lNormalizedValue;
+
+                        if (oJoystickInfo.oJoystickConfig.Invert_RotationX)
+                        {
+                            lNormalizedValue = oThisVJoystickInfo.lMinPlusMaxRX - lNormalizedValue;
+                        }
 
                         if (oThisVJoystickInfo.ControlerType == DevType.vJoy)
                         {
-                            oVirtualJoystick.SetAxis(iNormalizedValue, iVJoystickId, oJoystickInfo.Map_RotationX);
+                            oVirtualJoystick.SetAxis((int)lNormalizedValue, iVJoystickId, oJoystickInfo.Map_RotationX);
                         }
                         else
                         {
-                            vXboxInterface.SetAxis(iVJoystickId, (short)iNormalizedValue, oJoystickInfo.Map_RotationX);
+                            vXboxInterface.SetAxis(iVJoystickId, (short)lNormalizedValue, oJoystickInfo.Map_RotationX);
                         }
 
-                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName.Trim(), oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_RotationX));
+                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_RotationX, oThisVJoystickInfo.ControlerType));
 
 #if DEBUG
-                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, iNormalizedValue));
+                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, lNormalizedValue));
 #endif
                     }
                     break;
                 case SharpDX.DirectInput.JoystickOffset.RotationY:
-                    if (Math.Abs(oJoystickInfo.PreviousRY - oState.Value) > oJoystickInfo.PercentRY)
+                    lNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinRYVal, oJoystickInfo.lRYRange, oThisVJoystickInfo.lMinRYVal, oThisVJoystickInfo.lRYRange);
+                    if ((Math.Abs(oJoystickInfo.PreviousRY - oState.Value) > oJoystickInfo.PercentRY) || (Math.Abs(oThisVJoystickInfo.PreviousRY - lNormalizedValue) > oThisVJoystickInfo.PercentRY))
                     {
                         oJoystickInfo.PreviousRY = oState.Value;
-                        iNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinRYVal, oJoystickInfo.lRYRange, oJoystickInfo.oJoystickConfig.Invert_RotationY, oThisVJoystickInfo.lMinRYVal, oThisVJoystickInfo.lMinPlusMaxRY, oThisVJoystickInfo.lRYRange);
+                        oThisVJoystickInfo.PreviousRY = lNormalizedValue;
 
                         if (oThisVJoystickInfo.ControlerType == DevType.vJoy)
                         {
-                            oVirtualJoystick.SetAxis(iNormalizedValue, iVJoystickId, oJoystickInfo.Map_RotationY);
+                            if (oJoystickInfo.oJoystickConfig.Invert_RotationY)
+                            {
+                                lNormalizedValue = oThisVJoystickInfo.lMinPlusMaxRY - lNormalizedValue;
+                            }
+
+                            oVirtualJoystick.SetAxis((int)lNormalizedValue, iVJoystickId, oJoystickInfo.Map_RotationY);
                         }
                         else
                         {
-                            vXboxInterface.SetAxis(iVJoystickId, (short)iNormalizedValue, oJoystickInfo.Map_RotationY);
+                            if (!oJoystickInfo.oJoystickConfig.Invert_RotationY)
+                            {
+                                lNormalizedValue = oThisVJoystickInfo.lMinPlusMaxRY - lNormalizedValue;
+                            }
+
+                            vXboxInterface.SetAxis(iVJoystickId, (short)lNormalizedValue, oJoystickInfo.Map_RotationY);
                         }
 
-                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName.Trim(), oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_RotationY));
+                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_RotationY, oThisVJoystickInfo.ControlerType));
 
 #if DEBUG
-                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, iNormalizedValue));
+                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, lNormalizedValue));
 #endif
                     }
                     break;
                 case SharpDX.DirectInput.JoystickOffset.RotationZ:
-                    if (Math.Abs(oJoystickInfo.PreviousRZ - oState.Value) > oJoystickInfo.PercentRZ)
+                    lNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinRZVal, oJoystickInfo.lRZRange, oThisVJoystickInfo.lMinRZVal, oThisVJoystickInfo.lRZRange);
+                    if ((Math.Abs(oThisVJoystickInfo.PreviousRZ - oState.Value) > oJoystickInfo.PercentRZ) || (Math.Abs(oThisVJoystickInfo.PreviousRZ - lNormalizedValue) > oThisVJoystickInfo.PercentRZ))
                     {
                         oJoystickInfo.PreviousRZ = oState.Value;
-                        iNormalizedValue = NormalizeRange(oState.Value, oJoystickInfo.lMinRZVal, oJoystickInfo.lRZRange, oJoystickInfo.oJoystickConfig.Invert_RotationZ, oThisVJoystickInfo.lMinRZVal, oThisVJoystickInfo.lMinPlusMaxRZ, oThisVJoystickInfo.lRZRange);
+                        oThisVJoystickInfo.PreviousRZ = lNormalizedValue;
 
-                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName.Trim(), oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_RotationZ));
+                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_RotationZ, oThisVJoystickInfo.ControlerType));
 
 #if DEBUG
-                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, iNormalizedValue));
+                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, lNormalizedValue));
 #endif
 
                         if (oThisVJoystickInfo.ControlerType == DevType.vJoy)
                         {
-                            oVirtualJoystick.SetAxis(iNormalizedValue, iVJoystickId, oJoystickInfo.Map_RotationZ);
+                            if (oJoystickInfo.oJoystickConfig.Invert_RotationZ)
+                            {
+                                lNormalizedValue = oThisVJoystickInfo.lMinPlusMaxRZ - lNormalizedValue;
+                            }
+
+                            oVirtualJoystick.SetAxis((int)lNormalizedValue, iVJoystickId, oJoystickInfo.Map_RotationZ);
                         }
                         else
                         {
-                            WriteToEventLog("\t\tNot supported");
+                            if (!oJoystickInfo.oJoystickConfig.Invert_RotationZ)
+                            {
+                                lNormalizedValue = oThisVJoystickInfo.lMinPlusMaxRZ - lNormalizedValue;
+                            }
+
+                            vXboxInterface.SetAxis(iVJoystickId, (short)lNormalizedValue, oJoystickInfo.Map_RotationZ);
+
                         }
+
+                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_RotationZ, oThisVJoystickInfo.ControlerType));
+
+#if DEBUG
+                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, lNormalizedValue));
+#endif
                     }
                     break;
 
@@ -797,12 +902,12 @@ namespace MTOvJoyFeeder
                         vXboxInterface.SetDpadByValue(iVJoystickId, oState.Value);
                     }
 
-                    WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual Device {2} [PointOfViewController {3}]", oJoystickInfo.oDeviceInstance.InstanceName.Trim(), oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_PointOfViewControllers0));
+                    WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [PointOfViewController {3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_PointOfViewControllers0, oThisVJoystickInfo.ControlerType));
 
                     break;
                 case SharpDX.DirectInput.JoystickOffset.PointOfViewControllers1:
 
-                    WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual Device {2} [PointOfViewController {3}]", oJoystickInfo.oDeviceInstance.InstanceName.Trim(), oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_PointOfViewControllers1));
+                    WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [PointOfViewController {3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_PointOfViewControllers1, oThisVJoystickInfo.ControlerType));
 
                     if (oThisVJoystickInfo.ControlerType == DevType.vJoy)
                     {
@@ -816,7 +921,7 @@ namespace MTOvJoyFeeder
                     break;
                 case SharpDX.DirectInput.JoystickOffset.PointOfViewControllers2:
 
-                    WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual Device {2} [PointOfViewController {3}]", oJoystickInfo.oDeviceInstance.InstanceName.Trim(), oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_PointOfViewControllers2));
+                    WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [PointOfViewController {3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_PointOfViewControllers2, oThisVJoystickInfo.ControlerType));
 
                     if (oThisVJoystickInfo.ControlerType == DevType.vJoy)
                     {
@@ -830,7 +935,7 @@ namespace MTOvJoyFeeder
                     break;
                 case SharpDX.DirectInput.JoystickOffset.PointOfViewControllers3:
 
-                    WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual Device {2} [PointOfViewController {3}]", oJoystickInfo.oDeviceInstance.InstanceName.Trim(), oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_PointOfViewControllers3));
+                    WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [PointOfViewController {3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_PointOfViewControllers3, oThisVJoystickInfo.ControlerType));
 
                     if (oThisVJoystickInfo.ControlerType == DevType.vJoy)
                     {
@@ -862,17 +967,17 @@ namespace MTOvJoyFeeder
                                     vXboxInterface.SetBtn(oState.Value != 0, iVJoystickId, oJoystickInfo.oJoystickConfig.Map_Buttons[iButtonNumber]);
                                 }
 
-                                WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual Device {2} [Button {3}]", oJoystickInfo.oDeviceInstance.InstanceName.Trim(), oState.Offset.ToString(), iVJoystickId, oJoystickInfo.oJoystickConfig.Map_Buttons[iButtonNumber]));
+                                WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [Button {3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.oJoystickConfig.Map_Buttons[iButtonNumber], oThisVJoystickInfo.ControlerType));
                             }
                             else
                             {
-                                WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual Device {2} [Button ?] - Not mapped in config file", oJoystickInfo.oDeviceInstance.InstanceName.Trim(), oState.Offset.ToString(), iVJoystickId));
+                                WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {3} Device {2} [Button ?] - Not mapped in config file", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oThisVJoystickInfo.ControlerType));
                             }
                         }
                     }
                     else
                     {
-                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual Device {2} [?]", oJoystickInfo.oDeviceInstance.InstanceName.Trim(), oState.Offset.ToString(), iVJoystickId));
+                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {3} Device {2} [?]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oThisVJoystickInfo.ControlerType));
                         WriteToEventLog("\t\tNot supported");
                     }
 
@@ -880,20 +985,9 @@ namespace MTOvJoyFeeder
             }
         }
 
-        static int NormalizeRange(int num, long fromMin, decimal fromRange, bool invert, long toMin, long toMinPlusMax, long toRange)
+        static int NormalizeRange(int num, long fromMin, decimal fromRange, long toMin, long toRange)
         {
-            decimal lReturn;
-
-            if (invert)
-            {
-                lReturn = toMinPlusMax - (toMin + (num - fromMin) / fromRange * toRange);
-            }
-            else
-            {
-                lReturn = toMin + (num - fromMin) / fromRange * toRange;
-                
-            }
-
+            decimal lReturn = toMin + (num - fromMin) / fromRange * toRange;
             return (int)Math.Floor(lReturn);
         }
 
