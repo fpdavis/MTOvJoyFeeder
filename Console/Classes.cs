@@ -29,7 +29,7 @@ namespace MTOvJoyFeeder
 
     }
 
-    class Options
+    public class Options
     {
         private Nullable<uint> _Verbosity { get; set; }
         [Option('v', "Verbosity", HelpText =
@@ -53,43 +53,35 @@ namespace MTOvJoyFeeder
             set { _Verbosity = value; }
         }
 
-        private string _ConfigFile { get; set; }
-        [Option('c', "config", Required = false, HelpText = "Override location of the config file.<br/>Full or relative path must be provided.<br/>[-c c:\\configs\\MTOvJoyFeeder.json]")]
-        public string ConfigFile
+        private string _ControllerConfig { get; set; }
+        [Option('c', "ControllerConfig", Required = false, HelpText = "Override location of the config file.<br/>Full or relative path must be provided.<br/> [-c MTOvJoyFeeder.json]")]
+        public string ControllerConfig
         {
             get
             {
-                if (!String.IsNullOrWhiteSpace(_ConfigFile)) return _ConfigFile;
+                if (!String.IsNullOrWhiteSpace(_ControllerConfig)) return _ControllerConfig;
 
-                string sConfigPath = ConfigurationManager.AppSettings["ConfigPath"];
+                _ControllerConfig = ConfigurationManager.AppSettings["ControllerConfig"];
 
-                if (string.IsNullOrWhiteSpace(sConfigPath))
+                if (string.IsNullOrWhiteSpace(_ControllerConfig))
                 {
-                    sConfigPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                    _ControllerConfig = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\" + "MTOvJoyFeeder.json";                    
                 }
 
-                string sConfigFile = ConfigurationManager.AppSettings["ConfigFile"];
-                if (string.IsNullOrWhiteSpace(sConfigFile))
-                {
-                    sConfigFile += "MTOvJoyFeeder.json";
-                }
-
-                _ConfigFile = sConfigPath + "\\" + sConfigFile;
-
-                return _ConfigFile;
+                return _ControllerConfig;
             }
-            set { _ConfigFile = value; }
+            set { _ControllerConfig = value; }
         }
 
         private Nullable<uint> _ErrorsBeforeJoystickRemoval { get; set; }
-        [Option('m', "MaxErrors", Required = false, HelpText = "Maximum number of errors before removing a Joystick from monitoring. [-m 500]")]
+        [Option('r', "ErrorsBeforeJoystickRemoval", Required = false, HelpText = "Maximum number of errors before removing a Joystick from monitoring. [-r 500]")]
         public uint ErrorsBeforeJoystickRemoval
         {
             get
             {
                 if (_ErrorsBeforeJoystickRemoval.HasValue) return (uint)_ErrorsBeforeJoystickRemoval;
 
-                _ErrorsBeforeJoystickRemoval = uint.TryParse(ConfigurationManager.AppSettings["ErrorsBeforeJoystickRemoval"], out uint iReturn) ? iReturn : 50;
+                _ErrorsBeforeJoystickRemoval = uint.TryParse(ConfigurationManager.AppSettings["ErrorsBeforeJoystickRemoval"], out uint iReturn) ? iReturn : 500;
 
                 return (uint)_ErrorsBeforeJoystickRemoval;
             }
@@ -97,7 +89,7 @@ namespace MTOvJoyFeeder
         }
 
         private Nullable<Boolean> _Silent { get; set; }
-        [Option('s', "silent", Required = false, HelpText = "If set to true, no messages will be sent to the console. [-s true]")]
+        [Option('s', "Silent", Required = false, HelpText = "If set to true, no messages will be sent to the console. [-s false]")]
         public Boolean Silent
         {
             get
@@ -112,7 +104,7 @@ namespace MTOvJoyFeeder
         }
 
         private Nullable<Boolean> _EnableEventLogging { get; set; }
-        [Option('e', "EnableEventLogging", Required = false, HelpText = "If set to true messages will be sent to the event log.<br/>Requires Admin privalages for the first run to generate the initial log. [-e true]")]
+        [Option('e', "EnableEventLogging", Required = false, HelpText = "If set to true messages will be sent to the event log.<br/>Requires Admin privalages for the first run to generate the initial log. [-e false]")]
         public Boolean EnableEventLogging
         {
             get
@@ -127,7 +119,7 @@ namespace MTOvJoyFeeder
         }
 
         private Nullable<Boolean> _EnableUnPlugForce { get; set; }
-        [Option('f', "EnableUnPlugForce", Required = false, HelpText = "On exit unplugs ALL virtual controllers controlled<br/>by any application, default is false. [-f true]")]
+        [Option('f', "EnableUnPlugForce", Required = false, HelpText = "On exit unplugs ALL virtual controllers controlled<br/>by any application, default is false. [-f false]")]
         public Boolean EnableUnPlugForce
         {
             get

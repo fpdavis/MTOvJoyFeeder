@@ -33,33 +33,35 @@ namespace MTOvJoyFeeder
 
         static void Main(string[] args)
         {
+            AppConfig.AssignConfig();
+
             var oParser = new CommandLine.Parser(with => with.HelpWriter = null);
-            var oPparserResult = oParser.ParseArguments<Options>(args);
-            oPparserResult
+            var oParserResult = oParser.ParseArguments<Options>(args);
+            oParserResult
              .WithParsed<Options>(options => Run(options))
-             .WithNotParsed(errs => DisplayHelp(oPparserResult, errs));
+             .WithNotParsed(errs => DisplayHelp(oParserResult, errs));
         } // Main
         
-        static void DisplayHelp<T>(ParserResult<T> oHelpResult, IEnumerable<Error> oErrors)
+        static void DisplayHelp<T>(ParserResult<T> oParserResult, IEnumerable<Error> oErrors)
         {
             string sHelpText;
-
+            
             if (oErrors.IsVersion())  //check if error is version request
             {
-                sHelpText = HelpText.AutoBuild(oHelpResult);
+                sHelpText = HelpText.AutoBuild(oParserResult);
             }
             else
             {
-                sHelpText = HelpText.AutoBuild(oHelpResult, oOptions =>
+                sHelpText = HelpText.AutoBuild(oParserResult, HelpTextInstance =>
             {
-                oOptions.AdditionalNewLineAfterOption = false; //remove the extra newline between options
-                oOptions.MaximumDisplayWidth = 50000;
-                return HelpText.DefaultParsingErrorsHandler(oHelpResult, oOptions);
+                HelpTextInstance.AdditionalNewLineAfterOption = false; //remove the extra newline between options
+                HelpTextInstance.MaximumDisplayWidth = 50000;
+                return HelpText.DefaultParsingErrorsHandler(oParserResult, HelpTextInstance);
             }, e => e);
             }
 
                 // I do not like the default formating that CommandLine Parser provides.
-                Console.WriteLine(sHelpText.Replace("<br/>", "\n".PadRight(31)));
+                Console.WriteLine(sHelpText.Replace("<br/>", "\n".PadRight(40)));
             }
 
         static void Run(Options oOptions)
@@ -611,7 +613,7 @@ namespace MTOvJoyFeeder
         {
             if (oAllVJoystickInfo.Count == 0 || oAllJoystickInfo.Count == 0)
             {
-                WriteToEventLog(String.Format("\nNo controllers to monitor. Check that controllers are plugged in, that virtual controller software is installed and working, and that physical controllers are mapped to virtual controllers in the config file ({0})", goOptions.ConfigFile, Verbosity.Warning));
+                WriteToEventLog(String.Format("\nNo controllers to monitor. Check that controllers are plugged in, that virtual controller software is installed and working, and that physical controllers are mapped to virtual controllers in the config file ({0})", goOptions.ControllerConfig, Verbosity.Warning));
                 return;
             }
 

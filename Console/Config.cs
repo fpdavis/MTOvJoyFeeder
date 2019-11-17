@@ -11,9 +11,9 @@ namespace MTOvJoyFeeder
         {
             List<JoystickConfig> oAllJoystickInfo = null;
             
-            if (File.Exists(Program.goOptions.ConfigFile))
+            if (File.Exists(Program.goOptions.ControllerConfig))
             {
-                string sAllJoystickInfo = File.ReadAllText(Program.goOptions.ConfigFile);
+                string sAllJoystickInfo = File.ReadAllText(Program.goOptions.ControllerConfig);
 
                 oAllJoystickInfo = JsonConvert.DeserializeObject<List<JoystickConfig>>(sAllJoystickInfo);
             }
@@ -50,7 +50,7 @@ namespace MTOvJoyFeeder
 
         private static void WriteConfigFile(List<JoystickConfig> oJoystickConfig)
         {
-            File.WriteAllText(Program.goOptions.ConfigFile, Regex.Replace(JsonConvert.SerializeObject(oJoystickConfig, Formatting.Indented), @"(\s+(\d))|((?<=\d)\s+([\]]))", "$2$4", RegexOptions.Multiline));            
+            File.WriteAllText(Program.goOptions.ControllerConfig, Regex.Replace(JsonConvert.SerializeObject(oJoystickConfig, Formatting.Indented), @"(\s+(\d))|((?<=\d)\s+([\]]))", "$2$4", RegexOptions.Multiline));            
         }
 
     }
