@@ -132,3 +132,6 @@ Example:
 * Made vXbox Y and RY inverted by default so directions match with vJoy
 * Added to this documentation
 * Fixed CommandLineParser's (https://github.com/commandlineparser) help display as it wasn't working due to the placement of a private variable between the [Option] and the public property definition.
+
+* No longer monitors physical controllers that are not mapped to a virtual controller
+* General messaging cleanup

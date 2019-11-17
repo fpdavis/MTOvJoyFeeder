@@ -91,11 +91,8 @@ namespace MTOvJoyFeeder
             }
             finally
             {
-                ReleasevXboxJoysticks();
+                ReleasevXboxJoysticks(oxBoxIdsToUse.Distinct().ToList());
             }
-
-            WriteToEventLog("End of line");
-
         }
 
         static Boolean CreatevXboxJoysticks(List<vJoystickInfo> oAllVJoystickInfo, List<uint> oVirtualJoysticksToUse)
@@ -188,23 +185,31 @@ namespace MTOvJoyFeeder
 
             return bReturn;
         }
-        static void ReleasevXboxJoysticks()
+        static void ReleasevXboxJoysticks(List<uint> oVirtualJoysticksToUse = null)
         {
-            WriteToEventLog(Environment.NewLine + "Releasing Virtual Device (vXBox) Controllers..." + Environment.NewLine);
-
-            for (uint iLoop = 1; iLoop < 5; iLoop++)
+            if (oVirtualJoysticksToUse == null)
             {
-                if (Program.goOptions.EnableUnPlugForce && vXboxInterface.isControllerExists(iLoop))
-                {
-                    WriteToEventLog(String.Format("\tVirtual Device {0}: {1}", iLoop, vXboxInterface.UnPlugForce(iLoop) ? "Successful" : "Unsuccessful"));
-                }
-                else if (vXboxInterface.isControllerOwned(iLoop))
-                {
-                    WriteToEventLog(String.Format("\tVirtual Device {0}: {1}", iLoop, vXboxInterface.UnPlug(iLoop) ? "Successful" : "Unsuccessful"));
-                }
+                oVirtualJoysticksToUse = new List<uint> { 1, 2, 3, 4 };
             }
 
-            WriteToEventLog(Environment.NewLine + "Controllers Released");
+            if (oVirtualJoysticksToUse.Count > 0)
+            {
+                WriteToEventLog(Environment.NewLine + "Releasing Virtual Device (vXBox) Controllers..." + Environment.NewLine);
+
+                for (uint iLoop = 1; iLoop < 5; iLoop++)
+                {
+                    if (Program.goOptions.EnableUnPlugForce && vXboxInterface.isControllerExists(iLoop))
+                    {
+                        WriteToEventLog(String.Format("\tVirtual Device {0}: {1}", iLoop, vXboxInterface.UnPlugForce(iLoop) ? "Successful" : "Unsuccessful"));
+                    }
+                    else if (vXboxInterface.isControllerOwned(iLoop))
+                    {
+                        WriteToEventLog(String.Format("\tVirtual Device {0}: {1}", iLoop, vXboxInterface.UnPlug(iLoop) ? "Successful" : "Unsuccessful"));
+                    }
+                }
+
+                WriteToEventLog(Environment.NewLine + "Controllers Released");
+            }
         }
 
         static void DetectVirtualJoysticks(List<vJoystickInfo> oAllVJoystickInfo, List<uint> oVirtualJoysticksToUse)
@@ -215,7 +220,7 @@ namespace MTOvJoyFeeder
             // Get the driver attributes (Vendor ID, Product ID, Version Number)
             if (!oVirtualJoystick.vJoyEnabled())
             {
-                WriteToEventLog($"\nvJoy driver not enabled: Failed Getting vJoy attributes.");
+                WriteToEventLog($"\nvJoy driver not enabled: Failed Getting vJoy attributes.", Verbosity.Critical);
                 return;
             }
             else
@@ -225,12 +230,10 @@ namespace MTOvJoyFeeder
             UInt32 DllVer = 0, DrvVer = 0;
             bool match = oVirtualJoystick.DriverMatch(ref DllVer, ref DrvVer);
             if (match)
-                WriteToEventLog($"Version of Driver Matches DLL Version ({DllVer:X})");
+                WriteToEventLog($"Version of Driver Matches DLL Version ({DllVer:X})\n");
             else
-                WriteToEventLog($"Version of Driver ({DrvVer:X}) does NOT match DLL Version ({DllVer:X})");
-
-            WriteToEventLog();
-
+                WriteToEventLog($"Version of Driver ({DrvVer:X}) does NOT match DLL Version ({DllVer:X})\n");
+            
             foreach (uint id in oVirtualJoysticksToUse)
             {
                 vJoystickInfo oNewVJoystickInfo = new vJoystickInfo();
@@ -522,7 +525,10 @@ namespace MTOvJoyFeeder
                     }
                 }
 
-                oAllJoystickInfo.Add(oNewJoystickInfo);
+                if (oNewJoystickInfo.Map_To_vJoyDevice_Ids.Length > 0 || oNewJoystickInfo.Map_To_xBox_Ids.Length > 0)
+                {
+                    oAllJoystickInfo.Add(oNewJoystickInfo);
+                }
             }
         }
 
@@ -597,7 +603,11 @@ namespace MTOvJoyFeeder
 
         static void PollJoysticks(List<vJoystickInfo> oAllVJoystickInfo, List<JoystickInfo> oAllJoystickInfo)
         {
-            if (oAllVJoystickInfo.Count == 0 || oAllJoystickInfo.Count == 0) return;
+            if (oAllVJoystickInfo.Count == 0 || oAllJoystickInfo.Count == 0)
+            {
+                WriteToEventLog(String.Format("\nNo controllers to monitor. Check that controllers are plugged in, that virtual controller software is installed and working, and that physical controllers are mapped to virtual controllers in the config file ({0})", goOptions.ConfigFile, Verbosity.Warning));
+                return;
+            }
 
             WriteToEventLog("\nMonitoring for events.\n");
 
@@ -631,13 +641,13 @@ namespace MTOvJoyFeeder
                         {
                             if (oJoystickInfo.ErrorCount++ > goOptions.ErrorsBeforeJoystickRemoval)
                             {
-                                WriteToEventLog(String.Format("\tRemoving {0}: {1} - {2}", oJoystickInfo.oDeviceInstance.InstanceName, oException.Message, oAcquireException.Message));
+                                WriteToEventLog(String.Format("\tRemoving {0}: {1} - {2}", oJoystickInfo.oDeviceInstance.InstanceName, oException.Message, oAcquireException.Message), Verbosity.Critical);
                                 oAllJoystickInfo.Remove(oJoystickInfo);
                             }
                         }
                         
 #if DEBUG
-                        WriteToEventLog(String.Format("\tException ({0}): {1}", oJoystickInfo.ErrorCount, oException.Message));
+                        WriteToEventLog(String.Format("\tException ({0}): {1}", oJoystickInfo.ErrorCount, oException.Message), Verbosity.Debug);
 #endif
                     }
 
@@ -667,7 +677,7 @@ namespace MTOvJoyFeeder
                                 //controller.SetVibration(vibration);
 
 #if DEBUG
-                                //   WriteToEventLog($"\t\tGetVibration: {oThisVJoystickInfo.pVib.wLeftMotorSpeed}, {oThisVJoystickInfo.pVib.wRightMotorSpeed}");
+                                // WriteToEventLog($"\t\tGetVibration: {oThisVJoystickInfo.pVib.wLeftMotorSpeed}, {oThisVJoystickInfo.pVib.wRightMotorSpeed}", Verbosity.Debug);
 #endif
                             }
                         }
@@ -716,10 +726,10 @@ namespace MTOvJoyFeeder
                             vXboxInterface.SetAxis(iVJoystickId, (short)lNormalizedValue, oJoystickInfo.Map_X);
                         }
 
-                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_X, oThisVJoystickInfo.ControlerType));
+                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_X, oThisVJoystickInfo.ControlerType), Verbosity.Verbose);
 
 #if DEBUG
-                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, lNormalizedValue));
+                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, lNormalizedValue), Verbosity.Debug);
 #endif
                     }
                     break;
@@ -749,10 +759,10 @@ namespace MTOvJoyFeeder
                             vXboxInterface.SetAxis(iVJoystickId, (short)lNormalizedValue, oJoystickInfo.Map_Y);
                         }
 
-                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_Y, oThisVJoystickInfo.ControlerType));
+                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_Y, oThisVJoystickInfo.ControlerType), Verbosity.Verbose);
 
 #if DEBUG
-                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, lNormalizedValue));
+                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, lNormalizedValue), Verbosity.Debug);
 #endif
                     }
                     break;
@@ -782,10 +792,10 @@ namespace MTOvJoyFeeder
                             vXboxInterface.SetZAxis(iVJoystickId, (short)lNormalizedValue);
                         }
 
-                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_Z, oThisVJoystickInfo.ControlerType));
+                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_Z, oThisVJoystickInfo.ControlerType), Verbosity.Verbose);
 
 #if DEBUG
-                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, lNormalizedValue));
+                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, lNormalizedValue), Verbosity.Debug);
 #endif
                     }
                     break;
@@ -811,10 +821,10 @@ namespace MTOvJoyFeeder
                             vXboxInterface.SetAxis(iVJoystickId, (short)lNormalizedValue, oJoystickInfo.Map_RotationX);
                         }
 
-                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_RotationX, oThisVJoystickInfo.ControlerType));
+                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_RotationX, oThisVJoystickInfo.ControlerType), Verbosity.Verbose);
 
 #if DEBUG
-                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, lNormalizedValue));
+                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, lNormalizedValue), Verbosity.Debug);
 #endif
                     }
                     break;
@@ -844,10 +854,10 @@ namespace MTOvJoyFeeder
                             vXboxInterface.SetAxis(iVJoystickId, (short)lNormalizedValue, oJoystickInfo.Map_RotationY);
                         }
 
-                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_RotationY, oThisVJoystickInfo.ControlerType));
+                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_RotationY, oThisVJoystickInfo.ControlerType), Verbosity.Verbose);
 
 #if DEBUG
-                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, lNormalizedValue));
+                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, lNormalizedValue), Verbosity.Debug);
 #endif
                     }
                     break;
@@ -858,10 +868,10 @@ namespace MTOvJoyFeeder
                         oJoystickInfo.PreviousRZ = oState.Value;
                         oThisVJoystickInfo.PreviousRZ = lNormalizedValue;
 
-                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_RotationZ, oThisVJoystickInfo.ControlerType));
+                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_RotationZ, oThisVJoystickInfo.ControlerType), Verbosity.Verbose);
 
 #if DEBUG
-                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, lNormalizedValue));
+                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, lNormalizedValue), Verbosity.Debug);
 #endif
 
                         if (oThisVJoystickInfo.ControlerType == DevType.vJoy)
@@ -884,10 +894,10 @@ namespace MTOvJoyFeeder
 
                         }
 
-                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_RotationZ, oThisVJoystickInfo.ControlerType));
+                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [{3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_RotationZ, oThisVJoystickInfo.ControlerType), Verbosity.Verbose);
 
 #if DEBUG
-                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, lNormalizedValue));
+                        WriteToEventLog(String.Format("\t\t{0}\r\n\t\tNormalized to: {1}", oState, lNormalizedValue), Verbosity.Debug);
 #endif
                     }
                     break;
@@ -902,12 +912,12 @@ namespace MTOvJoyFeeder
                         vXboxInterface.SetDpadByValue(iVJoystickId, oState.Value);
                     }
 
-                    WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [PointOfViewController {3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_PointOfViewControllers0, oThisVJoystickInfo.ControlerType));
+                    WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [PointOfViewController {3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_PointOfViewControllers0, oThisVJoystickInfo.ControlerType), Verbosity.Verbose);
 
                     break;
                 case SharpDX.DirectInput.JoystickOffset.PointOfViewControllers1:
 
-                    WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [PointOfViewController {3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_PointOfViewControllers1, oThisVJoystickInfo.ControlerType));
+                    WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [PointOfViewController {3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_PointOfViewControllers1, oThisVJoystickInfo.ControlerType), Verbosity.Verbose);
 
                     if (oThisVJoystickInfo.ControlerType == DevType.vJoy)
                     {
@@ -915,7 +925,7 @@ namespace MTOvJoyFeeder
                     }
                     else
                     {
-                        WriteToEventLog("\t\tNot supported");
+                        WriteToEventLog("\t\tNot supported", Verbosity.Verbose);
                     }
 
                     break;
@@ -929,13 +939,13 @@ namespace MTOvJoyFeeder
                     }
                     else
                     {
-                        WriteToEventLog("\t\tNot supported");
+                        WriteToEventLog("\t\tNot supported", Verbosity.Verbose);
                     }
 
                     break;
                 case SharpDX.DirectInput.JoystickOffset.PointOfViewControllers3:
 
-                    WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [PointOfViewController {3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_PointOfViewControllers3, oThisVJoystickInfo.ControlerType));
+                    WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [PointOfViewController {3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.Map_PointOfViewControllers3, oThisVJoystickInfo.ControlerType), Verbosity.Verbose);
 
                     if (oThisVJoystickInfo.ControlerType == DevType.vJoy)
                     {
@@ -943,7 +953,7 @@ namespace MTOvJoyFeeder
                     }
                     else
                     {
-                        WriteToEventLog("\t\tNot supported");
+                        WriteToEventLog("\t\tNot supported", Verbosity.Verbose);
                     }
 
                     break;
@@ -967,18 +977,18 @@ namespace MTOvJoyFeeder
                                     vXboxInterface.SetBtn(oState.Value != 0, iVJoystickId, oJoystickInfo.oJoystickConfig.Map_Buttons[iButtonNumber]);
                                 }
 
-                                WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [Button {3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.oJoystickConfig.Map_Buttons[iButtonNumber], oThisVJoystickInfo.ControlerType));
+                                WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {4} Device {2} [Button {3}]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oJoystickInfo.oJoystickConfig.Map_Buttons[iButtonNumber], oThisVJoystickInfo.ControlerType), Verbosity.Verbose);
                             }
                             else
                             {
-                                WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {3} Device {2} [Button ?] - Not mapped in config file", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oThisVJoystickInfo.ControlerType));
+                                WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {3} Device {2} [Button ?] - Not mapped in config file", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oThisVJoystickInfo.ControlerType), Verbosity.Verbose);
                             }
                         }
                     }
                     else
                     {
-                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {3} Device {2} [?]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oThisVJoystickInfo.ControlerType));
-                        WriteToEventLog("\t\tNot supported");
+                        WriteToEventLog(String.Format("\t{0} [{1}] --> Virtual {3} Device {2} [?]", oJoystickInfo.oDeviceInstance.InstanceName, oState.Offset.ToString(), iVJoystickId, oThisVJoystickInfo.ControlerType), Verbosity.Verbose);
+                        WriteToEventLog("\t\tNot supported", Verbosity.Verbose);
                     }
 
                     break;
@@ -1029,6 +1039,8 @@ namespace MTOvJoyFeeder
                 case CtrlType.CTRL_CLOSE_EVENT:
                 default:
                     ReleasevXboxJoysticks();
+
+                    WriteToEventLog("End of line");
                     return false;
             }
         }
