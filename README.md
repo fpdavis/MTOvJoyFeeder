@@ -68,7 +68,7 @@ Example:
 
 ### Todo (in order of importance):
 
-* Add Help details to command line
+* Add auto update
 * Add cleaner way to exit console application
 * Move some properties from JoystickInfo to JoystickConfig, currently there are some repeated elements that just get copied from JoystickConfig to JoystickInfo
 * Improved documentation/installation instructions
@@ -88,50 +88,40 @@ Example:
 * Loads all joystick data and virtual joystick data
 * Loop that directs all input from acquired joysticks to first virtual stick
 * Adding support for a configuration file
-
 * Added configuration name/location settings to app.config
 * Accepts configuration location from command line
 * Added mappings for joysticks from config
 * Added If DEBUG directive around Polling logging
 * Added handling of removed controller
-
 * Added WriteToEventLog to replace all Console.Write calls
 * Added better configuration/command line handling.
 * Added support for multiple virtual controls associated with physical controllers
 * Added config support for SleepTime
-
 * Realised vJoy doesn't emulate xBox controllers!
 * Converted using vJoyInterface to vGenInterface to get both vJoy and xBox controller support
 * Found out plugining in xBox controllers in vGenInterface is buggy and didn't work
 * Added vXboxInderface.dll support using vXboxInterfaceWrap.cs, kept vGen interface for vJoy
 * In process of wiring up vitual controls to xBox
 * Added an onExit routine to release vXBox joysticks
-
 * Normalized and wired up Z Axis
-
 * Wired up Diagonals on DPad for XBox Controller
 * Validated All XBox inputs - Guide Button is the only one left to wire up
-
 * Upgraded packages 
 * Added shell for Windows Service
 * Moved console application to its own directory
-
 * Cleaned up debug code
 * Added output for release mode
 * Improved vxBox ReleasevXboxJoysticks method
 * Fixed max value for in vXboxInterfaceWrap as it was 1 higher than it should have been causing the number to go negative on conversion to a Short
-
 * Added inversion option to physical joysticks an support in NormalizeRange(), normally the Y Axis will be inverted for XBox controllers
 * Added Ranges For X, Y, Z, RX, RY for controllers and virtual controllers for use by NormalizeRange() 
-
 * Tested NormalizeRange()
 * Added formatting to JSON output to remove extra newlines and spaces before integers in arrays
 * Fixed issue with not dynamically setting size of oNewJoystickInfo.Map_Buttons array by using JoystickConfig.Map_Buttons instead
 * Added an Assets folder to hold references and copy out required files from
-
 * Made vXbox Y and RY inverted by default so directions match with vJoy
 * Added to this documentation
-* Fixed CommandLineParser's (https://github.com/commandlineparser) help display as it wasn't working due to the placement of a private variable between the [Option] and the public property definition.
-
+* Fixed CommandLineParser's (https://github.com/commandlineparser/commandline) help display as it wasn't working due to the placement of a private variable between the [Option] and the public property definition.
 * No longer monitors physical controllers that are not mapped to a virtual controller
 * General messaging cleanup
+* Added Fody.Costura (https://github.com/Fody/Costura) to consolidate all resources into the executable

@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Diagnostics;
-using System.Text;
 using System.Threading;
 using CommandLine;
 using SharpDX.DirectInput;
-using SharpDX.XInput;
 using vGenInterfaceWrap;
 using vXboxInterfaceWrap;
 using System.Linq;
@@ -45,16 +42,25 @@ namespace MTOvJoyFeeder
         
         static void DisplayHelp<T>(ParserResult<T> oHelpResult, IEnumerable<Error> oErrors)
         {
-            string sHelpText = HelpText.AutoBuild(oHelpResult, oOptions =>
+            string sHelpText;
+
+            if (oErrors.IsVersion())  //check if error is version request
+            {
+                sHelpText = HelpText.AutoBuild(oHelpResult);
+            }
+            else
+            {
+                sHelpText = HelpText.AutoBuild(oHelpResult, oOptions =>
             {
                 oOptions.AdditionalNewLineAfterOption = false; //remove the extra newline between options
                 oOptions.MaximumDisplayWidth = 50000;
                 return HelpText.DefaultParsingErrorsHandler(oHelpResult, oOptions);
             }, e => e);
+            }
 
-            // I do not like the default formating that CommandLine Parser provides.
-            Console.WriteLine(sHelpText.Replace("<br/>", "\n".PadRight(31)));
-        }
+                // I do not like the default formating that CommandLine Parser provides.
+                Console.WriteLine(sHelpText.Replace("<br/>", "\n".PadRight(31)));
+            }
 
         static void Run(Options oOptions)
         {

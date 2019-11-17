@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using SharpDX.DirectInput;
 using CommandLine;
-using CommandLine.Text;
 using System.Diagnostics;
 using System.Configuration;
 using System.IO;
