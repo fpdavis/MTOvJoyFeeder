@@ -68,6 +68,11 @@ namespace MTOvJoyFeeder
         {
             goOptions = oOptions;
             
+            if (goOptions.AutomaticUpdate)
+            {
+                Update.Check();
+            }
+
             oEventHandler += new EventHandler(OnExit);
             SetConsoleCtrlHandler(oEventHandler, true);
             
@@ -617,11 +622,12 @@ namespace MTOvJoyFeeder
                 return;
             }
 
-            WriteToEventLog("\nMonitoring for events.\n");
+            WriteToEventLog("\nMonitoring for events. Hit [Esc] to quit.\n");
 
             JoystickUpdate[] oBufferedData;
             JoystickInfo oJoystickInfo;
             int iSleepTime = goOptions.SleepTime;
+            ConsoleKeyInfo oKey;
 
             // Poll events from joystick
             while (true)
@@ -700,6 +706,15 @@ namespace MTOvJoyFeeder
                                 SendCommand(iVJoystickId, oJoystickInfo, oThisVJoystickInfo, oState);
                             }
                         }
+                    }
+                }
+
+                if (Console.KeyAvailable)
+                {
+                    oKey = Console.ReadKey(true);
+                    if (oKey.Key == ConsoleKey.Escape || oKey.Key == ConsoleKey.Backspace)
+                    {
+                        break;
                     }
                 }
 

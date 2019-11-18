@@ -68,11 +68,8 @@ Example:
 
 ### Todo (in order of importance):
 
-* Add auto update
-* Add cleaner way to exit console application
 * Move some properties from JoystickInfo to JoystickConfig, currently there are some repeated elements that just get copied from JoystickConfig to JoystickInfo
 * Determine current support for Force Feedback in vJoy/vXbox/SharpDX
-* Test with all available joysticks
 * Add timer to detect controllers when they are added
 * Create Windows Service
 * Create Launchbox plugin
@@ -127,3 +124,5 @@ Example:
 * Added Fody.Costura (https://github.com/Fody/Costura) to consolidate all resources into the executable
 * Changed the config file from using MTOvJoyFeeder.EXE.config to using MTOvJoyFeeder.config
 * MTOvJoyFeeder.config file is not deployed with the application but generated from defaults when first run
+* Added auto update routines with support for "updates" and "PreviousVersion" directories
+* You can now exit the application by hitting the [Esc] or [Backspace] keys while the command window has focus

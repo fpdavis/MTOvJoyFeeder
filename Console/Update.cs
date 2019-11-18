@@ -1,211 +1,203 @@
-﻿//using System;
-//using System.Collections.Generic;
-//using System.IO;
-//using System.IO.Compression;
-//using System.IO.Packaging;
-//using System.Linq;
-//using System.Net;
-//using System.Reflection;
-//using System.Text;
-//using System.Text.RegularExpressions;
-//using System.Threading.Tasks;
+﻿using System;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
+using System.Net;
+using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
 
 
-//namespace CommonPluginHelper
-//{
-//    public static class PluginUpdate
-//    {
-//        public static void Check()
-//        {
-//            string sApplicationName = Assembly.GetExecutingAssembly().GetName().Name;
-//            string sMyVersionDate = PluginAppSettings.GetString("VersionDate");
-//            string[] aCurrentVersionData = GetCurrentVersionData();
+namespace MTOvJoyFeeder
+{
+    public static class Update
+    {
+        public static void Check()
+        {
+            string sApplicationName = Assembly.GetExecutingAssembly().GetName().Name;
+            System.Version oThisVersion = Assembly.GetEntryAssembly().GetName().Version;
+            (Version oLatestVersion, string sLatestFilename) = GetLatestVersionData();
 
-//            if (!string.IsNullOrWhiteSpace(aCurrentVersionData[0]) && sMyVersionDate != aCurrentVersionData[0])
-//            {
-//                if (PluginAppSettings.GetBoolean("AutomaticUpdates") || MessageBox.Show("A newer version of " + sApplicationName + " is available (" + aCurrentVersionData[0] + "). Would you like to update?", "Update Available", MessageBoxButtons.YesNo) == DialogResult.Yes)
-//                {
-//                    string sSaveLocation = Path.GetDirectoryName(Assembly.GetCallingAssembly().Location);
-//                    if (GetCurrentVersion(aCurrentVersionData, ref sSaveLocation))
-//                    {
-//                        try
-//                        {
-//                            var oUpdateDirectory = new FileInfo(sSaveLocation).Directory;
-//                            var oPreviousVersionDirectory = Directory.CreateDirectory(oUpdateDirectory.Parent.FullName + "\\PreviousVersion");
+            if (oLatestVersion != null &&  oThisVersion.CompareTo(oLatestVersion) < 0)
+            {
+                Program.WriteToEventLog("A newer version of " + sApplicationName + " is available (" + oLatestVersion.ToString() + ").", Verbosity.Warning);
 
-//                            foreach (FileInfo oFileInfo in oPreviousVersionDirectory.GetFiles())
-//                            {
-//                                oFileInfo.Delete();
-//                            }
+                string sSaveLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                if (GetCurrentVersion(oLatestVersion, sLatestFilename, ref sSaveLocation))
+                {
+                    try
+                    {
+                        var oUpdateDirectory = new FileInfo(sSaveLocation).Directory;
 
-//                            try
-//                            {
-//                                foreach (FileInfo oFileInfo in oPreviousVersionDirectory.Parent.GetFiles())
-//                                {
-//                                    // Move dlls to the PreviousVersion folder
-//                                    if (oFileInfo.Name.EndsWith(".dll"))
-//                                    {
-//                                        File.Move(oFileInfo.FullName,
-//                                            oFileInfo.FullName.Replace(oPreviousVersionDirectory.Parent.FullName,
-//                                                oPreviousVersionDirectory.FullName) + ".previousversion");
-//                                    }
-//                                }
+                        DirectoryInfo oPreviousVersionDirectory;
+                        if (!Directory.Exists(oUpdateDirectory.Parent.FullName + "\\PreviousVersion\\"))
+                        {
+                            oPreviousVersionDirectory = Directory.CreateDirectory(oUpdateDirectory.Parent.FullName + "\\PreviousVersion\\");
+                        }
+                        else
+                        {
+                            oPreviousVersionDirectory = new FileInfo(oUpdateDirectory.Parent.FullName + "\\PreviousVersion\\").Directory;
+                        }
 
-//                                Decompress(sSaveLocation, oPreviousVersionDirectory.Parent.FullName);
-//                            }
-//                            catch (Exception oException)
-//                            {
-//                                // Rollback
-//                                foreach (FileInfo oFileInfo in oPreviousVersionDirectory.GetFiles())
-//                                {
-//                                    // Move dlls back to the main plugin folder
-//                                    if (oFileInfo.Name.EndsWith(".previousversion"))
-//                                    {
-//                                        File.Move(oFileInfo.FullName,
-//                                            oFileInfo.FullName.Replace(oPreviousVersionDirectory.FullName,
-//                                                oPreviousVersionDirectory.Parent.FullName).Replace(".previousversion", string.Empty));
-//                                    }
-//                                }
+                        foreach (FileInfo oFileInfo in oPreviousVersionDirectory.GetFiles())
+                        {
+                            oFileInfo.Delete();
+                        }
 
-//                                throw;
-//                            }
+                        try
+                        {
+                            foreach (FileInfo oFileInfo in oPreviousVersionDirectory.Parent.GetFiles())
+                            {
+                                // Move files to the PreviousVersion folder
+                                if (oFileInfo.Name.Contains(".config") || oFileInfo.Name.Contains(".json"))
+                                {
+                                    File.Copy(oFileInfo.FullName, oPreviousVersionDirectory.FullName + "\\" + oFileInfo.Name);
+                                }
+                                else
+                                {
+                                    File.Move(oFileInfo.FullName, oPreviousVersionDirectory.FullName + "\\" + oFileInfo.Name);
+                                }
+                            }
 
-//                            PluginAppSettings.SetString("VersionDate", aCurrentVersionData[0]);
-//                            PluginAppSettings.Save();
+                            Decompress(sSaveLocation, oPreviousVersionDirectory.Parent.FullName);
+                        }
+                        catch
+                        {
+                            // Rollback
+                            foreach (FileInfo oFileInfo in oPreviousVersionDirectory.GetFiles())
+                            {
+                                // Move files back to the main plugin folder
+                                File.Move(oFileInfo.FullName, oPreviousVersionDirectory.Parent.FullName + "\\" + oFileInfo.Name);
+                            }
 
-//                            if (!PluginAppSettings.GetBoolean("AutomaticUpdates"))
-//                            {
-//                                MessageBox.Show(
-//                                    sApplicationName + " has been updated. Update will be applied on next restart of LaunchBox/BigBox",
-//                                    "Update Successful", MessageBoxButtons.OK);
-//                            }
-//                        }
-//                        catch (Exception exception)
-//                        {
-//                            if (!PluginAppSettings.GetBoolean("AutomaticUpdates"))
-//                            {
-//                                MessageBox.Show(
-//                                    sApplicationName + " could not be updated. Exception: " + exception.Message + Resources.UpdateError,
-//                                    "Update Unsuccessful", MessageBoxButtons.OK);
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//            else if (!PluginAppSettings.GetBoolean("AutomaticUpdates") && string.IsNullOrWhiteSpace(aCurrentVersionData[0]))
-//            {
-//                MessageBox.Show("A version number could not be found. " + Resources.UpdateError, "Version not fond", MessageBoxButtons.OK);
-//            }
-//            else if (!PluginAppSettings.GetBoolean("AutomaticUpdates"))
-//            {
-//                MessageBox.Show("You are up to date.", "No Update Available", MessageBoxButtons.OK);
-//            }
-//        }
+                            throw;
+                        }
+                        
+                        Program.WriteToEventLog(sApplicationName + " has been updated. Update will be applied on next restart of application", Verbosity.Warning);
+                    }
+                    catch (Exception exception)
+                    {
+                        Program.WriteToEventLog(sApplicationName + " could not be updated. Exception: " + exception.Message + " This may be due to a network issue, a configuration issue, lack of file permissions, or a too out of date install that can not be auto updated. If this error persists please update manually by downloading the latest version from https://github.com/fpdavis/MTOvJoyFeeder/releases", Verbosity.Error);
+                    }
+                }
+            }
+            else if (oLatestVersion == null)
+            {
+                Program.WriteToEventLog("A version number could not be found while checking for an update.", Verbosity.Critical);
+            }
+            else
+            {
+                Program.WriteToEventLog(String.Format("{0} ({1}) is up to date.", sApplicationName, oThisVersion.ToString()), Verbosity.Information);
+            }
+        }
 
-//        public static void Decompress(string zipFilePath, string extractPath)
-//        {
-//            using (ZipArchive archive = ZipFile.OpenRead(zipFilePath))
-//            {
-//                string sEntryPath;
+        private static void Decompress(string zipFilePath, string extractPath)
+        {
+            using (ZipArchive archive = ZipFile.OpenRead(zipFilePath))
+            {
+                string sEntryPath;
 
-//                foreach (ZipArchiveEntry oEntry in archive.Entries)
-//                {
-//                    if (!oEntry.FullName.Contains(".config"))
-//                    {
-//                        sEntryPath = Path.Combine(extractPath, GetRightPartOfPath(oEntry.FullName));
-//                        Directory.CreateDirectory(Path.GetDirectoryName(sEntryPath));
+                foreach (ZipArchiveEntry oEntry in archive.Entries)
+                {
+                    sEntryPath = Path.Combine(extractPath, GetRightPartOfPath(oEntry.FullName));
+                    Directory.CreateDirectory(Path.GetDirectoryName(sEntryPath));
 
-//                        oEntry.ExtractToFile(sEntryPath);
-//                    }
-//                }
-//            }
-//        }
+                    oEntry.ExtractToFile(sEntryPath);
+                }
+            }
+        }
 
-//        private static string GetRightPartOfPath(string path)
-//        {
-//            string[] pathParts;
+        private static string GetRightPartOfPath(string path)
+        {
+            string[] pathParts;
 
-//            // use the correct seperator for the environment
-//            if (path.Contains(Path.DirectorySeparatorChar))
-//            {
-//                pathParts = path.Split(Path.DirectorySeparatorChar);
-//            }
-//            else
-//            {
-//                pathParts = path.Split(Path.AltDirectorySeparatorChar);
-//            }
+            // use the correct seperator for the environment
+            if (path.Contains(Path.DirectorySeparatorChar))
+            {
+                pathParts = path.Split(Path.DirectorySeparatorChar);
+            }
+            else
+            {
+                pathParts = path.Split(Path.AltDirectorySeparatorChar);
+            }
 
-//            return string.Join(
-//                Path.DirectorySeparatorChar.ToString(),
-//                pathParts, 1,
-//                pathParts.Length - 1);
-//        }
+            return string.Join(
+                Path.DirectorySeparatorChar.ToString(),
+                pathParts, 1,
+                pathParts.Length - 1);
+        }
 
-//        private static string[] GetCurrentVersionData()
-//        {
-//            string sVersionData = string.Empty;
-//            string sFileName = string.Empty;
+        private static (Version, string) GetLatestVersionData()
+        {
+            Version oLatestVersion = null;
+            string sLatestFilename = string.Empty;
 
-//            byte[] oBytes = null;
+            byte[] oBytes = null;
 
-//            try
-//            {
-//                if (!string.IsNullOrWhiteSpace(PluginAppSettings.GetString("VersionUrl")))
-//                {
-//                    oBytes = new WebClient().DownloadData(PluginAppSettings.GetString("VersionUrl"));
-//                }
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(Program.goOptions.VersionUrl))
+                {
+                    oBytes = new WebClient().DownloadData(Program.goOptions.VersionUrl);
+                }
 
-//                if (oBytes != null)
-//                {
-//                    string sWebResponse = Encoding.UTF8.GetString(oBytes);
+                if (oBytes != null)
+                {
+                    string sWebResponse = Encoding.UTF8.GetString(oBytes);
 
-//                    //<span class="css-truncate-target">1.0.0</span>
-//                    //Match match = Regex.Match(sWebResponse, @"<span\s*class=""css-truncate-target"">(.*)<\/span>", RegexOptions.IgnoreCase);
+                    //<span class="css-truncate-target">1.0.0</span>
+                    //Match match = Regex.Match(sWebResponse, @"<span\s*class=""css-truncate-target"">(.*)<\/span>", RegexOptions.IgnoreCase);
 
-//                    // /fpdavis/MarquesasServer/releases/download/1.0.0/MarquesasServer.zip
-//                    // \/fpdavis\/MarquesasServer\/releases\/download\/(.*\/.*)[^""]
-//                    Match match = Regex.Match(sWebResponse, @"\/fpdavis\/MarquesasServer\/releases\/download\/(.*)\/([^""]*)", RegexOptions.IgnoreCase);
+                    // /fpdavis/MTOvJoyFeeder/releases/download/1.0.0/MTOvJoyFeeder.zip
+                    // \/fpdavis\/MarquesasServer\/releases\/download\/(.*\/.*)[^""]
+                    Match match = Regex.Match(sWebResponse, @"\/fpdavis\/MTOvJoyFeeder\/releases\/download\/(.*)\/([^""]*)", RegexOptions.IgnoreCase);
 
-//                    // Here we check the Match instance.
-//                    if (match.Success)
-//                    {
-//                        // Finally, we get the Group value representing the version number.
-//                        sVersionData = match.Groups[1].Value.Trim();
-//                        sFileName = match.Groups[2].Value.Trim();
-//                    }
-//                }
-//            }
-//            catch
-//            {
-//                // ignored
-//            }
+                    // Here we check the Match instance.
+                    if (match.Success)
+                    {
+                        // Finally, we get the Group value representing the version number.
+                        System.Version.TryParse(match.Groups[1].Value.Trim(), out oLatestVersion);
+                        sLatestFilename = match.Groups[2].Value.Trim();
+                    }
+                }
+            }
+            catch
+            {
+                // ignored
+            }
 
-//            return (new[] { sVersionData, sFileName });
-//        }
+            return (oLatestVersion, sLatestFilename);
+        }
 
-//        private static Boolean GetCurrentVersion(string[] aVersionData, ref string sSaveLocation)
-//        {
-//            Boolean bSuccess = false;
-//            sSaveLocation += "\\Updates\\" + aVersionData[1].Replace(".", "-" + aVersionData[0] + ".");
+        private static Boolean GetCurrentVersion(Version oLatestVersion, string sLatestFilename, ref string sSaveLocation)
+        {
+            Boolean bSuccess = false;
+            sSaveLocation += "\\Updates\\" + sLatestFilename.Replace(".", "-" + oLatestVersion.ToString() + ".");
 
-//            try
-//            {
-//                byte[] oBytes = new WebClient().DownloadData("https://github.com/fpdavis/MarquesasServer/releases/download/" + aVersionData[0] + "/" + aVersionData[1]);
+            if (File.Exists(sSaveLocation))
+            {
+                Program.WriteToEventLog("New version previously downloaded to " + sSaveLocation, Verbosity.Critical);
+                return true;
+            }
 
-//                if (oBytes != null && oBytes.Length > 20000)
-//                {
-//                    new FileInfo(sSaveLocation).Directory?.Create();
+            try
+            {
+                byte[] oBytes = new WebClient().DownloadData(Program.goOptions.DownloadUrl + "/" + oLatestVersion.ToString() + "/" + sLatestFilename);
 
-//                    File.WriteAllBytes(sSaveLocation, oBytes);
-//                    bSuccess = true;
-//                }
-//            }
-//            catch
-//            {
-//                MessageBox.Show("New version could not be downloaded. " + Resources.UpdateError, "Version not fond", MessageBoxButtons.OK);
-//            }
+                if (oBytes != null && oBytes.Length > 20000)
+                {
+                    new FileInfo(sSaveLocation).Directory?.Create();
 
-//            return bSuccess;
-//        }
-//    }
-//}
+                    File.WriteAllBytes(sSaveLocation, oBytes);
+                    bSuccess = true;
+                }
+            }
+            catch
+            {
+                Program.WriteToEventLog("New version could not be downloaded. This may be due to a network issue, a configuration issue, lack of file permissions, or a too out of date install that can not be auto updated. If this error persists please update manually by downloading the latest version from https://github.com/fpdavis/MTOvJoyFeeder/releases");
+            }
+
+            return bSuccess;
+        }
+    }
+}

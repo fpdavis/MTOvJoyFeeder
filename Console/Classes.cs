@@ -146,7 +146,50 @@ namespace MTOvJoyFeeder
                 return (int)_SleepTime;
             }
             set { _SleepTime = value; }
-        }        
+        }
+        
+        private Nullable<Boolean> _AutomaticUpdate { get; set; }
+        [Option('u', "AutomaticUpdate", Required = false, HelpText = "Check if there is a newer version of the application and<br/>automatically download and install it if one is available. [-u true]")]
+        public Boolean AutomaticUpdate
+        {
+            get
+            {
+                if (_AutomaticUpdate.HasValue) return (Boolean)_AutomaticUpdate;
+
+                _AutomaticUpdate = Boolean.TryParse(ConfigurationManager.AppSettings["AutomaticUpdate"], out Boolean bReturn) ? bReturn : true;
+
+                return (Boolean)_AutomaticUpdate;
+            }
+            set { _AutomaticUpdate = value; }
+        }
+
+        private string _VersionUrl { get; set; }
+        public string VersionUrl
+        {
+            get
+            {
+                if (!String.IsNullOrWhiteSpace(_VersionUrl)) return (string)_VersionUrl;
+
+                _VersionUrl = !String.IsNullOrWhiteSpace(ConfigurationManager.AppSettings["VersionUrl"]) ? ConfigurationManager.AppSettings["VersionUrl"] : "https://github.com/fpdavis/MTOvJoyFeeder/releases";
+
+                return _VersionUrl;
+            }
+            set { _VersionUrl = value; }
+        }
+
+        private string _DownloadUrl { get; set; }
+        public string DownloadUrl
+        {
+            get
+            {
+                if (!String.IsNullOrWhiteSpace(_DownloadUrl)) return (string)_DownloadUrl;
+
+                _DownloadUrl = !String.IsNullOrWhiteSpace(ConfigurationManager.AppSettings["DownloadUrl"]) ? ConfigurationManager.AppSettings["DownloadUrl"] : "https://github.com/fpdavis/MTOvJoyFeeder/releases/download";
+
+                return _DownloadUrl;
+            }
+            set { _DownloadUrl = value; }
+        }
     }
 
     public class vJoystickInfo

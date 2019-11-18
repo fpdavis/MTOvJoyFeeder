@@ -60,8 +60,7 @@ namespace MTOvJoyFeeder
                 System.IO.File.WriteAllText(ConfigPath, oStringBuilder.ToString());
             }
         }
-
-
+        
         public static StringBuilder CreateConfigSection(Options oOptions, ref StringBuilder oStringBuilder)
         {
             oStringBuilder.AppendLine("     <appSettings>");
@@ -76,6 +75,59 @@ namespace MTOvJoyFeeder
 
             return (oStringBuilder);
         }
+
+        public static Boolean GetBoolean(String key)
+        {
+            Boolean.TryParse(GetString(key), out bool bAppSetting);
+
+            return bAppSetting;
+        }
+
+        public static int GetInt(String key)
+        {
+            int.TryParse(GetString(key), out int iAppSetting);
+
+            return iAppSetting;
+        }
+
+        public static Decimal GetDecimal(String key)
+        {
+            Decimal.TryParse(GetString(key), out decimal dAppSetting);
+
+            return dAppSetting;
+        }
+
+        public static string GetString(string key)
+        {
+            if (ConfigurationManager.AppSettings[key] != null)
+            {
+                return ConfigurationManager.AppSettings[key];
+            }
+
+            return string.Empty;
+        }
+
+        public static void SetString(string key, string value)
+        {
+            if (key != null && value != null)
+            {
+                if (ConfigurationManager.AppSettings[key] != null)
+                {
+                    ConfigurationManager.AppSettings[key] = value;
+                }
+                else
+                {
+                    ConfigurationManager.AppSettings.Add(key, value);
+                }
+            }
+        }
+
+        public static void Save()
+        {
+            //ConfigurationManager.Save(ConfigurationSaveMode.Modified);
+            //ConfigurationManager.RefreshSection("appSettings");
+        }
+
     }
 }
 
